@@ -29,12 +29,15 @@ class ReadingDatas:
             line = f.readline().split()
             self._load = float(line[1])
             self._durationRoute = float(line[0])
+            if self._durationRoute == 0.0:
+                self._durationRoute = 9999.0
 
         #dados clientes
-        for i in range(self._numberDepots):
-            self._dataDepots.append(f.readline())
+        for i in range(self._numberCustomers):
+            self._dataCustomers.append(f.readline())
 
-        self._dataCustomers = f.readlines()
+        #dados clientes - últimas linhas - refere-se aos depósitos
+        self._dataDepots = f.readlines()
 
 
     def get_numberVehicles(self):
@@ -53,7 +56,7 @@ class ReadingDatas:
         return self._dataCustomers
 
     def get_durationRoute(self):
-        self._durationRoute
+        return self._durationRoute
 
     def get_dataDepots(self):
         return self._dataDepots

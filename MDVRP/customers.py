@@ -7,10 +7,9 @@ from customer import Customer
 
 
 class Customers:
-    def __init__(self):
-        self._customersList={}
+    _customersList={}
 
-    def addCustomers(self,rd):
+    def addCustomers(rd):
         clist=[]
         for i in range(rd.get_numberCustomers()):
             dataCustomer = rd.get_dataCustomers()[i].split()
@@ -25,7 +24,7 @@ class Customers:
 
             clist.append((dataCustomer[0],cst))
 
-        self._customersList=dict(clist)
+        Customers._customersList=dict(clist)
 
-    def get_customersList(self):
-        return self._customersList
+    def get_customersList():
+        return Customers._customersList

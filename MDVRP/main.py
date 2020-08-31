@@ -6,25 +6,63 @@ from readingDatas import ReadingDatas
 from customers import Customers
 from depots import Depots
 from distances import Distances
+from route import Route
+from solution import Solution
+from initialPopulation import InitialPopulation
+from vrp_algorithms import VRP_algorithms as VRP
+
 
 def main():
+    #recebendo instâncias
     r = ReadingDatas("dat/p01")
     r.readFile()
-    c = Customers()
-    c.addCustomers(r)
-    print(c.get_customersList()['8'])
-    for cst in c.get_customersList().values():
-        print(cst)
+    #adicionando clientes
+    Customers.addCustomers(r)
+    #for cst in Customers.get_customersList().values():
+        #print(cst)
 
-    dpts = Depots()
-    dpts.addDepots(r)
+    #adicionando depósitos
+    Depots.addDepots(r)
     #print("\n\n\n\")
-    print(dpts.get_depotsList()['1'])
-    for dpt in dpts.get_depotsList().values():
-        print(dpt)
+    #for dpt in Depots.get_depotsList().values():
+        #print(dpt)
 
-    d = Distances()
-    d.euclidianDistanceAll(c.get_customersList(),dpts.get_depotsList())
+    #cálculo das distâncias
+    Distances.euclidianDistanceAll(Customers.get_customersList(),Depots.get_depotsList())
+
+    '''
+    route = Route('52')
+    route.addCustomer('8')
+    route.addCustomer('9')
+    route.addCustomer('10')
+    route.calculeCost()
+    route.get_totalCost()
+    route.printRoute()
+    route1 = Route('53')
+    route1.addCustomer('11')
+    route1.addCustomer('19')
+    route1.addCustomer('20')
+    route2 = Route('54')
+    route2.addCustomer('22')
+    route2.addCustomer('23')
+    route2.addCustomer('25')
+
+    solution = Solution()
+    solution.addRoutes(route)
+    solution.addRoutes(route1)
+    solution.addRoutes(route2)
+    print(solution.get_routes())
+    solution.formGiantTour()
+    solution.calculateCost()
+    '''
+    individual = InitialPopulation()
+    individual.GilletJohnson()
+    print("......")
+    print(individual.get_population()[0])
+    print("......")
+    VRP.mountRoutes(individual.get_population()[0], 'Prins_depotsSeparated')
+    print(individual.get_population()[0].calculateCost())
+
 
 
 

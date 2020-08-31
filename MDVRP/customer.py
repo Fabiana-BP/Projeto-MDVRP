@@ -1,15 +1,15 @@
 class Customer:
 
     def __init__(self):
-        self._id = 0
+        self._id = ""
         self._x_coord = 0
         self._y_coord = 0
         self._duration = 0
         self._demand = 0
         self._beginTimeWindow = 0
         self._endTimeWindow = 0
-        self._depotsDistances = {}
-        self._neighborsDistances = {}
+        self._depotsDistances = []
+        self._neighborsDistances = []
 
 
     def get_id(self):

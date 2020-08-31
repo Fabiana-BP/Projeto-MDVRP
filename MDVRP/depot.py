@@ -1,12 +1,13 @@
 class Depot:
 
     def __init__(self):
-        self._id = 0
-        self._x_coord = 0
-        self._y_coord = 0
-        self._durationRoute = 0
+        self._id = ""
+        self._x_coord = 0.0
+        self._y_coord = 0.0
+        self._durationRoute = 0.0
         self._numberVehicles = 0
-        self._loadTotal = 0
+        self._loadVehicle = 0.0
+        self._loadTotal = 0.0
 
 
     def get_id(self):
@@ -46,13 +47,22 @@ class Depot:
         self._numberVehicles = v
 
 
+    def get_loadVehicle(self):
+        return self._loadVehicle
+
+
+    def set_loadVehicle(self,l):
+        self._loadVehicle = l
+
+
     def get_loadTotal(self):
-        return self._load
+        return self._loadTotal
 
 
     def set_loadTotal(self,l):
-        self._load = l
+        self._loadTotal = l
+
 
 
     def __str__(self):
-        return "id: " + str(self._id) + "  coord: " + str(self._x_coord) + ".." + str(self._y_coord) + "  loadTotal: " + str(self._load) + "  vehicles: "+ str(self._numberVehicles)
+        return "id: " + str(self._id) + "  coord: " + str(self._x_coord) + ".." + str(self._y_coord) + "  loadTotal: " + str(self._loadTotal) + "  vehicles: "+ str(self._numberVehicles)
