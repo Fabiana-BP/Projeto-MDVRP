@@ -35,6 +35,10 @@ class Depot:
         return self._durationRoute
 
 
+    def get_durationTotal(self):
+        return self._durationRoute * self._numberVehicles
+
+
     def set_durationRoute(self,d):
         self._durationRoute = d
 
@@ -66,3 +70,6 @@ class Depot:
 
     def __str__(self):
         return "id: " + str(self._id) + "  coord: " + str(self._x_coord) + ".." + str(self._y_coord) + "  loadTotal: " + str(self._loadTotal) + "  vehicles: "+ str(self._numberVehicles)
+
+    def __repr__(self):
+        return str(self._id)

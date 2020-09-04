@@ -6,10 +6,7 @@ from readingDatas import ReadingDatas
 from customers import Customers
 from depots import Depots
 from distances import Distances
-from route import Route
-from solution import Solution
 from initialPopulation import InitialPopulation
-from vrp_algorithms import VRP_algorithms as VRP
 
 
 def main():
@@ -29,41 +26,17 @@ def main():
 
     #cálculo das distâncias
     Distances.euclidianDistanceAll(Customers.get_customersList(),Depots.get_depotsList())
-
     '''
-    route = Route('52')
-    route.addCustomer('8')
-    route.addCustomer('9')
-    route.addCustomer('10')
-    route.calculeCost()
-    route.get_totalCost()
-    route.printRoute()
-    route1 = Route('53')
-    route1.addCustomer('11')
-    route1.addCustomer('19')
-    route1.addCustomer('20')
-    route2 = Route('54')
-    route2.addCustomer('22')
-    route2.addCustomer('23')
-    route2.addCustomer('25')
-
-    solution = Solution()
-    solution.addRoutes(route)
-    solution.addRoutes(route1)
-    solution.addRoutes(route2)
-    print(solution.get_routes())
-    solution.formGiantTour()
-    solution.calculateCost()
-    '''
-    individual = InitialPopulation()
-    individual.GilletJohnson()
-    print("......")
-    print(individual.get_population()[0])
-    print("......")
-    VRP.mountRoutes(individual.get_population()[0], 'Prins_depotsSeparated')
-    print(individual.get_population()[0].calculateCost())
-
-
+    for cst in Customers.get_customersList():
+        print(cst)
+        print(Customers.get_customersList()[cst].get_depotsDistances())
+    print("\n\n\n")
+    for cst in Customers.get_customersList():
+        print(cst)
+        print(Customers.get_customersList()[cst].get_neighborsDistances())
+        '''
+    pop = InitialPopulation()
+    pop.definePopulation()
 
 
 if __name__ == "__main__":

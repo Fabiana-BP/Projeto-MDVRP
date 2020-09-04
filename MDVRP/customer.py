@@ -68,3 +68,6 @@ class Customer:
 
     def __str__(self):
         return "id: " + str(self._id) + "  coord: " + str(self._x_coord) + ".." + str(self._y_coord) + " demand: " + str(self._demand)
+
+    def __repr__(self):
+        return str(self._id)

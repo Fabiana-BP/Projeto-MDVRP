@@ -9,13 +9,13 @@ from depot import Depot
 class Depots:
     _depotsList={} #dicionário de depósitos
     _numberDepots = 0
-    _loadVehicle = 0 #capacidade de cada veículo
-    _durationRoute = 0
+    #_loadVehicle = 0 #capacidade de cada veículo
+    #_durationRoute = 0
     def addDepots(rd):
         ldepot=[]
         Depots._numberDepots = rd.get_numberDepots()
-        Depots._loadVehicle = rd.get_load()
-        Depots._durationRoute = rd.get_durationRoute()
+        #Depots._loadVehicle = rd.get_load()
+        #Depots._durationRoute = rd.get_durationRoute()
         for i in range(Depots._numberDepots):
             dataDepot = rd.get_dataDepots()[i].split()
             dpt = Depot()
@@ -35,9 +35,10 @@ class Depots:
 
     def get_numberDepots():
         return Depots._numberDepots
-
+'''
     def get_loadVehicle():
         return Depots._loadVehicle
 
     def get_durationRoute():
         return Depots._durationRoute
+'''

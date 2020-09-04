@@ -10,10 +10,10 @@ class Solution:
     _depots = None
 
     def __init__(self):
-        self._giantTour = [] #lista de strings, cada item um cliente
+        self._giantTour = [] #lista de clientes, cada item um Customer
         self._routes = [] #lista de Route
         self._cost = 0
-        self._depots = [] #lista de strings, cada item o depósito de cada cliente
+        self._depots = [] #lista de depósitos, cada item o Depot de cada cliente
 
 
     '''
@@ -27,24 +27,27 @@ class Solution:
     Método concatena as rotas em uma única lista (giantTour)
     '''
     def formGiantTour(self):
+        self._giantTour = []
+        self._depots = []
         for r in self._routes:
             self._giantTour = self._giantTour + r.get_tour()
             for i in range(len(r.get_tour())):
-                self._depots.append(r.get_depotId())
+                self._depots.append(r.get_depot())
 
 
     '''
     Método adiciona clientes no giantTour e o depósito correspondente
     '''
-    def addGiantTour(self,idCustomer,idDepot):
-        self._giantTour.append(idCustomer)
-        self._depots.append(idDepot)
+    def addGiantTour(self,customer,depot):
+        self._giantTour.append(customer)
+        self._depots.append(depot)
+
 
 
     '''
     Método calcula diversidade do indivíduo
-    '''
-    def diversity(self,nClose):
+
+    def diversity(self,nClose,population,individual):
         div = 0.0
         i=0;
         for t in self._giantTour:
@@ -66,7 +69,7 @@ class Solution:
 
         div = div/float(len(self._giantTour))
         return div
-
+    '''
 
     '''
     Método calcula o custo total da solução
@@ -77,8 +80,8 @@ class Solution:
             r.calculeCost()
             self._cost += r.get_totalCost()
 
-        self._cost += self.diversity(10)
-        print(self._cost)
+        #self._cost += self.diversity(10)
+        #print(self._cost)
 
 
     '''
@@ -91,9 +94,15 @@ class Solution:
     def get_giantTour(self):
         return self._giantTour
 
+
     def get_depots(self):
         return self._depots
 
+
+    def get_cost(self):
+        return self._cost
+
+
     def __str__(self):
 
-        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots)
+        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "custo: " + str(self._cost)
