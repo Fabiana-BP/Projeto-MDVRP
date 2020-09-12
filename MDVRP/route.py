@@ -119,3 +119,6 @@ class Route:
 
     def __str__(self):
         return "depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - duração total: {:10.4f} - rota: {}".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalDuration,str(self._tour))
+
+    def __repr__(self):
+        return "depósito: {} - rota: {} - custo com penalização: {:10.4f}".format(self._depot.get_id(),str(self._tour),self.get_totalCost())

@@ -1,6 +1,7 @@
 from depots import Depots as dpts
 from customers import Customers as csts
 from solution import Solution
+from distances import Distances as dist
 import numpy as np
 import math
 import copy
@@ -11,26 +12,85 @@ class SplitDepots:
 
     '''
     Método para distribuir clientes de forma aleatória aos depósitos.
-
+    '''
     def randomDistribution(idum):
-        print('Entrou aqui')
+        #print('Entrou aqui')
         np.random.seed(idum)
         SplitDepots._individual = Solution()
         customersList = copy.deepcopy(csts.get_customersList())#dicionário
-        l = list(customersList.keys()) #lista com as chaves dos clientes
+        keysCst = list(customersList.keys()) #lista com as chaves dos clientes
         depots = dpts.get_depotsList() #dicionário
-        nCustomers = len(l)
+        nCustomers = len(keysCst)
+        solution = {}
 
         control = {} #(depósito, [total de demanda, duração por depósito]
 
         for depot in depots:
             control[depot] = [0,0]
-
-        solution = Solution()
-
         while nCustomers > 0: #enquanto tiver cliente não alocado
+            #cliente aleatório
+            idCst = np.random.randint(0,len(keysCst))
+            customer = customersList[keysCst[idCst]]
+            #depósito mais próximo
+            i=0
+            dpt = customer.get_depotsDistances()[i]
+            cont = len(customer.get_depotsDistances())
+            aux = 0
+            while ((control[str(dpt[0])][0] > depots[str(dpt[0])].get_loadTotal()+ 0.0001) or control[str(dpt[0])][1] > depots[str(dpt[0])].get_durationTotal()) and cont>0:
+                if cont == 1:
+                    aux = 1 #indica que todos os depósitos anteriores estão lotados
+                i += 1
+                dpt = customer.get_depotsDistances()[i]
+                cont -= 1
 
-        '''
+            depot = depots[str(dpt[0])]
+            control[str(dpt[0])][0] = control[str(dpt[0])][0] + customer.get_demand()
+            control[str(dpt[0])][1] = control[str(dpt[0])][1] + customer.get_duration()
+
+            #adicionar cliente ao depósito
+            SplitDepots._individual.addGiantTour(customer,depot)
+            del keysCst[idCst] #atualizar lista
+            nCustomers -= 1
+            #escolher três clientes aleatórios
+            if len(keysCst)>0:
+                idcst1 = np.random.randint(0,len(keysCst))
+                neighbor1 = customersList[keysCst[idcst1]]
+                dist1 = dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),neighbor1.get_x_coord(),neighbor1.get_y_coord())
+                idcst2 = np.random.randint(0,len(keysCst))
+                neighbor2 = customersList[keysCst[idcst2]]
+                dist2 = dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),neighbor2.get_x_coord(),neighbor2.get_y_coord())
+                idcst3 = np.random.randint(0,len(keysCst))
+                neighbor3 = customersList[keysCst[idcst3]]
+                dist3 = dist1 = dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),neighbor3.get_x_coord(),neighbor3.get_y_coord())
+                #ver o mais próximo ao cliente
+                if dist1 <= dist2 and dist1 <= dist3:
+                    close = neighbor1
+                    id = idcst1
+                elif dist2 <= dist1 and dist2 <= dist3:
+                    close = neighbor2
+                    id = idcst2
+                else:
+                    close = neighbor3
+                    id = idcst3
+
+                control[str(dpt[0])][0] = control[str(dpt[0])][0] + close.get_demand()
+                control[str(dpt[0])][1] = control[str(dpt[0])][1] + close.get_duration()
+
+                if (control[str(dpt[0])][0] <= depot.get_loadTotal() + 0.0001 and control[str(dpt[0])][1] <= (depot.get_durationTotal())) or aux ==1:
+                    #adicionar vizinho mais próximo a solução
+                    SplitDepots._individual.addGiantTour(close,depot)
+                    del keysCst[id] #atualizar lista
+                    nCustomers -= 1
+                else:
+                    control[str(dpt[0])][0] = control[str(dpt[0])][0] - close.get_demand()
+                    control[str(dpt[0])][1] = control[str(dpt[0])][1] - close.get_duration()
+
+
+
+        #print(self._individual.get_giantTour())
+        #print(SplitDepots._individual.get_depots())
+        return SplitDepots._individual
+
 
 
 
@@ -43,6 +103,7 @@ class SplitDepots:
     '''
     def GilletJohnson():
         SplitDepots._individual = Solution()
+        SplitDepots._availableDepots = []
         customersList = copy.deepcopy(csts.get_customersList()) #dicionário
 
         for dpt in dpts.get_depotsList():

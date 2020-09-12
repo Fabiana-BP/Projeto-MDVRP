@@ -17,6 +17,9 @@ class Depot:
     def set_id(self,id):
         self._id = id
 
+    def get_duration(self):
+        return 0.0
+
 
     def get_x_coord(self):
         return self._x_coord

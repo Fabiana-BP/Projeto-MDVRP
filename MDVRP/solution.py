@@ -105,4 +105,4 @@ class Solution:
 
     def __str__(self):
 
-        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "custo: " + str(self._cost)
+        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost)
