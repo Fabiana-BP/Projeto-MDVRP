@@ -3,6 +3,7 @@ from customers import Customers as csts
 from splitDepots import SplitDepots
 from split_algorithms import Split_algorithms as split
 from solution import Solution
+from auxiliary_heuristics import NearestNeighbor
 import numpy as np
 
 class InitialPopulation:
@@ -13,15 +14,26 @@ class InitialPopulation:
     '''
     Método define população inicial
     '''
-    def definePopulation(self):
+    def definePopulation(self,size):
+        #Heurística do vizinho mais próximo
+        for cst in  csts.get_customersList():
+            tour = NearestNeighbor.nearestNeighbor(csts.get_customersList()[cst])
+            break
+        clusters = SplitDepots.splitByDepot(tour)
+        individual = split.splitLinearBounded(clusters) #criação de rotas por depósitos, individual é um Solution
+        self._population.append(individual)
+
         #“cluster first and then route”
         clusters = SplitDepots.GilletJohnson() #divisão por depósitos
         #individual = split.mountRoutes(clusters) #criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinearBounded(clusters) #criação de rotas por depósitos, individual é um Solution
-        self._population.append(individual)
+        if individual is not None and self.is_different(individual):
+            self._population.append(individual)
 
         #formação de rotas aleatórias
-        for i in range(100):
+        for i in range(4*size):
+            if len(self._population)>=size:
+                break
             seed = int(5000 * np.random.random())
             sd = SplitDepots()
             sp = split()
@@ -33,6 +45,8 @@ class InitialPopulation:
         self._population = sorted(self._population, key = Solution.get_cost)
         for i in self._population:
             print(i)
+
+        print(len(self._population))
 
 
     def get_population(self):

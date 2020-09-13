@@ -10,6 +10,54 @@ class SplitDepots:
     _availableDepots = []
     _individual = None
 
+
+    '''
+    Método divide os clientes por depósito
+    '''
+    def splitByDepot(listCustomers):
+        customers = list(copy.deepcopy(listCustomers))
+        depots = dpts.get_depotsList() #dicionário
+        split = [] #cada indice da lista uma subrota
+        SplitDepots._individual = Solution()
+        nDepots = len(depots)
+        base = len(customers)/float(nDepots)
+        maxCustomers = int(1.05 * base)
+        #dividir em n grupos de clientes
+        aux = nDepots
+        for n in depots.values():
+            control = [0,0] #carregamento, duração
+            tour = []
+            while (control[0] < n.get_loadTotal() and control[1] < n.get_durationTotal()) or aux == 1: # se existir cliente não alocado
+                if len(customers)==0 or (aux>1 and len(tour)>maxCustomers):
+                    break
+                control[0] = control[0] + customers[0].get_demand()
+                control[1] = control[1] + customers[0].get_duration()
+                if (control[0] < n.get_loadTotal() and control[1] < n.get_durationTotal()) or aux == 1:
+                    tour.append(customers[0])
+                    del customers[0] #atualizar lista
+                else:
+                    control[0] = control[0] - customers[0].get_demand()
+                    control[1] = control[1] - customers[0].get_duration()
+                    break
+            split.append(tour)
+            aux -= 1
+        #associar o primeiro cliente da subrota ao depósito mais próximo
+        depotsAvailable = list(copy.deepcopy(depots).keys())
+        for s in split:
+            i = 0
+            depot = s[0].get_depotsDistances()[i]
+            while str(depot[0]) not in depotsAvailable:
+                i += 1
+                depot = s[0].get_depotsDistances()[i]
+            for cst in s:
+                SplitDepots._individual.addGiantTour(cst,depots[str(depot[0])])
+            depotsAvailable.remove(str(depot[0]))
+
+        return SplitDepots._individual
+
+
+
+
     '''
     Método para distribuir clientes de forma aleatória aos depósitos.
     '''

@@ -7,9 +7,11 @@ from customers import Customers
 from depots import Depots
 from distances import Distances
 from initialPopulation import InitialPopulation
+import numpy as np
 
 
 def main():
+    np.random.seed(7890)
     #recebendo instâncias
     r = ReadingDatas("dat/p01")
     r.readFile()
@@ -36,7 +38,7 @@ def main():
         print(Customers.get_customersList()[cst].get_neighborsDistances())
         '''
     pop = InitialPopulation()
-    pop.definePopulation()
+    pop.definePopulation(100)
 
 
 if __name__ == "__main__":
