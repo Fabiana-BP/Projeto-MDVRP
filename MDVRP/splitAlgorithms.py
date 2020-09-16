@@ -7,7 +7,7 @@ from solution import Solution
 import math
 import copy
 
-class Split_algorithms:
+class SplitAlgorithms:
     _infinite = math.inf
 
 
@@ -55,14 +55,14 @@ class Split_algorithms:
                 i = k+1
                 while (i <= len(listCst)) and (len(queue) > 0):
                     # o primeiro da fila será o melhor predecessor de i
-                    potential[k+1][i] = Split_algorithms.propagate(queue[0],i,k,listCst,sumDistance,potential,depot) #calcula custo de i a j
+                    potential[k+1][i] = SplitAlgorithms.propagate(queue[0],i,k,listCst,sumDistance,potential,depot) #calcula custo de i a j
                     pred[k+1][i] = queue[0]
 
                     #se i não é dominado pelo último da pilha
                     if i < len(listCst):
-                        if not(Split_algorithms.dominates(queue[len(queue)-1],i,k,listCst,sumDistance,potential,sumLoad,depot)):
+                        if not(SplitAlgorithms.dominates(queue[len(queue)-1],i,k,listCst,sumDistance,potential,sumLoad,depot)):
                             #então i será inserido, precisando remover quem ele domina
-                            while len(queue)>0 and Split_algorithms.dominatesRight(queue[len(queue)-1],i,k,listCst,sumDistance,potential,depot):
+                            while len(queue)>0 and SplitAlgorithms.dominatesRight(queue[len(queue)-1],i,k,listCst,sumDistance,potential,depot):
                                 del queue[len(queue)-1]
                             queue.append(i)
 
@@ -74,8 +74,7 @@ class Split_algorithms:
 
             if potential[depot.get_numberVehicles()][len(listCst)] > 1.e29:
                 #print("ERRO: nenhuma solução de divisão foi propagada até o último nó")
-
-                return Split_algorithms.mountRoutes(solution1)
+                return SplitAlgorithms.mountRoutes(solution1)
 
             else:
                #achando o número ótimo de rotas
@@ -160,8 +159,8 @@ class Split_algorithms:
                     path.append(customers[j])
             #print("path: "+str(path))
             #gerar rotas para cada caminho
-            pred = Split_algorithms.splitRoute(path, depot) #método retorna lista de predecessores
-            allroutes = Split_algorithms.extractVRP(pred,path) #método retorna lista de lista com rotas para um depósito (número máximo de veículos não delimitado)
+            pred = SplitAlgorithms.splitRoute(path, depot) #método retorna lista de predecessores
+            allroutes = SplitAlgorithms.extractVRP(pred,path) #método retorna lista de lista com rotas para um depósito (número máximo de veículos não delimitado)
             #verificar número de rotas formadas
 
             routes = []
@@ -218,7 +217,7 @@ class Split_algorithms:
         predecessor.append(-1) #depósito não tem precedente
         v.append(0.0)
         for i in range(n):
-            v.append(Split_algorithms._infinite)
+            v.append(SplitAlgorithms._infinite)
             predecessor.append("")
 
         for i in range(1,n+1):

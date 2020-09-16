@@ -16,9 +16,11 @@ class Route:
     _totalDuration = float()
     _routeVehicle = None
 
+
     def __init__(self,depot):
         self._tour = [] #lista de Customer
         self._depot = depot
+        self._infeasible = False
 
 
     '''
@@ -30,6 +32,7 @@ class Route:
         self._penaltyDemand = 0.0
         self._totalDemand = 0.0
         self._totalDuration = 0.0
+        self._infeasible = False
 
 
     '''
@@ -38,6 +41,23 @@ class Route:
     '''
     def addCustomer(self,customer):
         self._tour.append(customer)
+
+    '''
+    Método insere cliente na rota no índice index
+    @param cliente
+    @param índice
+    '''
+    def insertCustomer(self,customer,index):
+        self._tour.insert(index,customer)
+
+
+    '''
+    Método remove cliente da rota
+    @param índice do cliente a ser removido
+    @return cliente removido
+    '''
+    def popCustomer(self,index):
+        return self._tour.pop(index)
 
 
 
@@ -75,6 +95,83 @@ class Route:
         self.updatePenalty()
 
 
+    '''
+    Método calcula custo ao adicionar um nó a mais na rota
+    @param customer, índice de inserção
+    @return lista [custo com penalização, custo sem penalização, carregamento total, duração total]
+    '''
+    def costWithNode(self,customer,index):
+        cost = 0.0
+        load = self._totalDemand + customer.get_demand()
+        duration = self._totalDuration + customer.get_duration()
+        length = len(self._tour)
+
+        #verificar se ele ligará ao depósito
+        if index == 0:
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord())
+            + dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+            + dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord())
+        elif index == length:
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[length-1].get_x_coord(),self._tour[length-1].get_y_coord())
+            + dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+            + dist.euclidianDistance(self._tour[length-1].get_x_coord(),self._tour[length-1].get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+        #está entre dois clientes
+        else:
+             cost = self._cost - dist.euclidianDistance(self._tour[index-1].get_x_coord(),self._tour[index-1].get_y_coord(),self._tour[index+1].get_x_coord(),self._tour[index+1].get_y_coord())
+             + dist.euclidianDistance(self._tour[index-1].get_x_coord(),self._tour[index-1].get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+             + dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[index].get_x_coord(),self._tour[index].get_y_coord())
+
+        #verificar se há penalizações
+        costTotal = cost
+        if load > self._depot.get_loadVehicle():
+            costTotal += 1000 * load - self._depot.get_loadVehicle()
+        if duration > self._depot.get_durationRoute():
+            costTotal += 1000 * duration - self._depot.get_durationRoute()
+
+        return [costTotal,cost,load,duration]
+
+
+    '''
+    Método calcula custo ao remover um nó da rota
+    @param customer
+    @return lista [custo com penalização, custo sem penalização, carregamento total, duração total]
+    '''
+    def costWithoutNode(self,customer):
+        cost = 0.0
+        load = self._totalDemand - customer.get_demand()
+        duration = self._totalDuration - customer.get_duration()
+        length = len(self._tour)
+
+        if length == 1:#só tem esse cliente
+            return [0,0,0,0]
+        #verificar se ele liga ao depósito
+        elif self._tour[0].get_id() == customer.get_id():
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+            + dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[1].get_x_coord(),self._tour[1].get_y_coord())
+            - dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[1].get_x_coord(),self._tour[1].get_y_coord())
+
+        elif self._tour[length-1].get_id() == customer.get_id():
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+            + dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[length-2].get_x_coord(),self._tour[length-2].get_y_coord())
+            - dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[length-2].get_x_coord(),self._tour[length-2].get_y_coord())
+        #está entre dois clientes
+        else:
+            for i,cst in enumerate(self._tour):
+                if cst.get_id() == customer.get_id():
+                    cost = self._cost - dist.euclidianDistance(self._tour[i-1].get_x_coord(),self._tour[i-1].get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+                    - dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[i+1].get_x_coord(),self._tour[i+1].get_y_coord())
+                    + dist.euclidianDistance(self._tour[i-1].get_x_coord(),self._tour[i-1].get_y_coord(),self._tour[i+1].get_x_coord(),self._tour[i+1].get_y_coord())
+                    break
+        #verificar se há penalizações
+        costTotal = cost
+        if load > self._depot.get_loadVehicle():
+            costTotal += 1000 * load - self._depot.get_loadVehicle()
+        if duration > self._depot.get_durationRoute():
+            costTotal += 1000 * duration - self._depot.get_durationRoute()
+
+        return [costTotal,cost,load,duration ]
+
+
 
     '''
     Método atualiza penalizações caso restrições de duração total ou de capacidade sejam quebradas
@@ -84,6 +181,7 @@ class Route:
         capacity =  float(self._depot.get_loadVehicle())
         if self._totalDemand > capacity:
             self._penaltyDemand = 1000 * (self._totalDemand - capacity)
+            self._infeasible = True
         else:
             self._penaltyDemand = 0.0
 
@@ -91,6 +189,7 @@ class Route:
         #print(duration)
         if self._totalDuration > duration:
             self._penaltyDuration = 1000 * (self._totalDuration - duration)
+            self._infeasible = True
         else:
             self._penaltyDuration = 0.0
 
@@ -102,12 +201,23 @@ class Route:
         return self._cost + self._penaltyDuration + self._penaltyDemand
 
 
+    def set_cost(self,cost,load,duration):
+        self._cost = cost
+        self._totalDemand = load
+        self._totalDuration = duration
+        self.updatePenalty()
+
+
+
     def get_tour(self):
         return self._tour
 
 
     def get_depot(self):
         return self._depot
+
+    def is_infeasible(self):
+        return self._infeasible
 
 
     '''

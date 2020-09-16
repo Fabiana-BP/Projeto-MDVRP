@@ -14,12 +14,15 @@ class Solution:
         self._routes = [] #lista de Route
         self._cost = 0
         self._depots = [] #lista de depósitos, cada item o Depot de cada cliente
+        self._infeasible = False
 
 
     '''
     Método adiciona uma rota em uma lista
     '''
     def addRoutes(self,route):
+        if route.is_infeasible():
+            self._infeasible = True
         self._routes.append(route)
 
 
@@ -77,7 +80,6 @@ class Solution:
     def calculateCost(self):
         self._cost = 0.0
         for r in self._routes:
-            r.calculeCost()
             self._cost += r.get_totalCost()
 
         #self._cost += self.diversity(10)
@@ -104,5 +106,9 @@ class Solution:
 
 
     def __str__(self):
+        aux =""
+        if self._infeasible:
+            aux = "inviável"
 
-        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost)
+        return str(self._cost) + " - " + aux
+        #"giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux

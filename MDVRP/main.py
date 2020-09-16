@@ -6,7 +6,7 @@ from readingDatas import ReadingDatas
 from customers import Customers
 from depots import Depots
 from distances import Distances
-from initialPopulation import InitialPopulation
+from geneticAlgorithm import GeneticAlgorithm as GA
 import numpy as np
 
 
@@ -37,8 +37,9 @@ def main():
         print(cst)
         print(Customers.get_customersList()[cst].get_neighborsDistances())
         '''
-    pop = InitialPopulation()
-    pop.definePopulation(100)
+
+    ga = GA()
+    ga.GA()
 
 
 if __name__ == "__main__":

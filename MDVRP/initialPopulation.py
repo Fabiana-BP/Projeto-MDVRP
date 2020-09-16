@@ -1,7 +1,7 @@
 from depots import Depots as dpts
 from customers import Customers as csts
 from splitDepots import SplitDepots
-from split_algorithms import Split_algorithms as split
+from splitAlgorithms import SplitAlgorithms as split
 from solution import Solution
 from auxiliary_heuristics import NearestNeighbor
 import numpy as np
@@ -19,26 +19,26 @@ class InitialPopulation:
         for cst in  csts.get_customersList():
             tour = NearestNeighbor.nearestNeighbor(csts.get_customersList()[cst])
             break
-        clusters = SplitDepots.splitByDepot(tour)
-        individual = split.splitLinearBounded(clusters) #criação de rotas por depósitos, individual é um Solution
+        cluster = SplitDepots.splitByDepot(tour)
+        individual = split.splitLinearBounded(cluster) #criação de rotas por depósitos, individual é um Solution
         self._population.append(individual)
 
         #“cluster first and then route”
-        clusters = SplitDepots.GilletJohnson() #divisão por depósitos
-        #individual = split.mountRoutes(clusters) #criação de rotas por depósitos, individual é um Solution
-        individual = split.splitLinearBounded(clusters) #criação de rotas por depósitos, individual é um Solution
+        cluster = SplitDepots.GilletJohnson() #divisão por depósitos
+        #individual = split.mountRoutes(cluster) #criação de rotas por depósitos, individual é um Solution
+        individual = split.splitLinearBounded(cluster) #criação de rotas por depósitos, individual é um Solution
         if individual is not None and self.is_different(individual):
             self._population.append(individual)
 
         #formação de rotas aleatórias
-        for i in range(4*size):
+        for i in range(2*size):
             if len(self._population)>=size:
                 break
             seed = int(5000 * np.random.random())
             sd = SplitDepots()
             sp = split()
-            clusters = SplitDepots.randomDistribution(seed)
-            individual = split.splitLinearBounded(clusters) #criação de rotas por depósitos, individual é um Solution
+            cluster = SplitDepots.randomDistribution(seed)
+            individual = split.splitLinearBounded(cluster) #criação de rotas por depósitos, individual é um Solution
             if individual is not None and self.is_different(individual):
                 self._population.append(individual)
 
@@ -47,6 +47,8 @@ class InitialPopulation:
             print(i)
 
         print(len(self._population))
+        return self._population
+
 
 
     def get_population(self):

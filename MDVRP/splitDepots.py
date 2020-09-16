@@ -28,11 +28,11 @@ class SplitDepots:
             control = [0,0] #carregamento, duração
             tour = []
             while (control[0] < n.get_loadTotal() and control[1] < n.get_durationTotal()) or aux == 1: # se existir cliente não alocado
-                if len(customers)==0 or (aux>1 and len(tour)>maxCustomers):
+                if len(customers)==0 or (aux>1 and len(tour) >= maxCustomers):
                     break
                 control[0] = control[0] + customers[0].get_demand()
                 control[1] = control[1] + customers[0].get_duration()
-                if (control[0] < n.get_loadTotal() and control[1] < n.get_durationTotal()) or aux == 1:
+                if (control[0] <= n.get_loadTotal() and control[1] <= n.get_durationTotal()) or aux == 1:
                     tour.append(customers[0])
                     del customers[0] #atualizar lista
                 else:
@@ -68,13 +68,17 @@ class SplitDepots:
         customersList = copy.deepcopy(csts.get_customersList())#dicionário
         keysCst = list(customersList.keys()) #lista com as chaves dos clientes
         depots = dpts.get_depotsList() #dicionário
+        nDepots = len(depots)
+        base = len(customersList)/float(nDepots)
+        maxCustomers = int(1.05 * base)
+
         nCustomers = len(keysCst)
         solution = {}
 
-        control = {} #(depósito, [total de demanda, duração por depósito]
+        control = {} #(depósito, [total de demanda, duração por depósito, número de clientes alocados]
 
         for depot in depots:
-            control[depot] = [0,0]
+            control[depot] = [0,0,0]
         while nCustomers > 0: #enquanto tiver cliente não alocado
             #cliente aleatório
             idCst = np.random.randint(0,len(keysCst))
@@ -84,7 +88,8 @@ class SplitDepots:
             dpt = customer.get_depotsDistances()[i]
             cont = len(customer.get_depotsDistances())
             aux = 0
-            while ((control[str(dpt[0])][0] > depots[str(dpt[0])].get_loadTotal()+ 0.0001) or control[str(dpt[0])][1] > depots[str(dpt[0])].get_durationTotal()) and cont>0:
+            while (control[str(dpt[0])][0] > depots[str(dpt[0])].get_loadTotal()+ 0.0001 or control[str(dpt[0])][1] > depots[str(dpt[0])].get_durationTotal() or (cont>1 and control[str(dpt[0])][2] > maxCustomers)) and cont>0:
+
                 if cont == 1:
                     aux = 1 #indica que todos os depósitos anteriores estão lotados
                 i += 1
@@ -94,6 +99,7 @@ class SplitDepots:
             depot = depots[str(dpt[0])]
             control[str(dpt[0])][0] = control[str(dpt[0])][0] + customer.get_demand()
             control[str(dpt[0])][1] = control[str(dpt[0])][1] + customer.get_duration()
+            control[str(dpt[0])][2] = control[str(dpt[0])][2] + 1
 
             #adicionar cliente ao depósito
             SplitDepots._individual.addGiantTour(customer,depot)
@@ -123,8 +129,9 @@ class SplitDepots:
 
                 control[str(dpt[0])][0] = control[str(dpt[0])][0] + close.get_demand()
                 control[str(dpt[0])][1] = control[str(dpt[0])][1] + close.get_duration()
+                control[str(dpt[0])][2] = control[str(dpt[0])][2] + 1
 
-                if (control[str(dpt[0])][0] <= depot.get_loadTotal() + 0.0001 and control[str(dpt[0])][1] <= (depot.get_durationTotal())) or aux ==1:
+                if (control[str(dpt[0])][0] <= depot.get_loadTotal() + 0.0001 and control[str(dpt[0])][1] <= (depot.get_durationTotal()) and control[str(dpt[0])][2] < maxCustomers) or aux ==1:
                     #adicionar vizinho mais próximo a solução
                     SplitDepots._individual.addGiantTour(close,depot)
                     del keysCst[id] #atualizar lista
@@ -132,6 +139,7 @@ class SplitDepots:
                 else:
                     control[str(dpt[0])][0] = control[str(dpt[0])][0] - close.get_demand()
                     control[str(dpt[0])][1] = control[str(dpt[0])][1] - close.get_duration()
+                    control[str(dpt[0])][2] = control[str(dpt[0])][2] - 1
 
 
 
@@ -155,7 +163,7 @@ class SplitDepots:
         customersList = copy.deepcopy(csts.get_customersList()) #dicionário
 
         for dpt in dpts.get_depotsList():
-            SplitDepots._availableDepots.append([dpt,dpts.get_depotsList()[dpt].get_loadTotal(),0.0]) #depósito, carga total e demanda total atendida
+            SplitDepots._availableDepots.append([dpt,dpts.get_depotsList()[dpt].get_loadTotal(),0.0]) #depósito, carga totaL,demanda total atendida
 
         unallocatedCustomers = SplitDepots.GilletJohnsonProcedure(customersList,len(SplitDepots._availableDepots))
 
@@ -194,11 +202,13 @@ class SplitDepots:
 
         # ordenar lista auxiliar em ordem descrescente
         pts = sorted(auxiliar, key = lambda x: x[1],reverse=True)
+
         for dpt in SplitDepots._availableDepots:
+            control = 0
             for pt in pts:
                 if dpt[0] == pt[2]:
                     dpt[2] += pt[0].get_demand()
-                    if dpt[1] < dpt[2]: #se carga total < demanda total (considera cheio)
+                    if (dpt[2] > dpt[1]): # demanda total > carga total (considera cheio)
                         if numberDepotsAvailable > 1: #se ainda faltarem clientes para serem alocados e restar apenas 1 depósito, a carga total será desrespeitada
                             dpt[2] -= pt[0].get_demand()
                             print("é menor")
@@ -210,11 +220,13 @@ class SplitDepots:
                             SplitDepots._individual.addGiantTour(pt[0],depots[dpt[0]])
                             #remove da lista de unallocatedCustomers
                             unallocatedCustomers.pop(str(pt[0].get_id()),-1)
+                            control += 1
                     else:
                         #adiciona o cliente no depósito mais próximo
                         SplitDepots._individual.addGiantTour(pt[0],depots[dpt[0]])
                         #remove da lista de unallocatedCustomers
                         unallocatedCustomers.pop(str(pt[0].get_id()),-1)
+                        control += 1
 
 
         #print(":")
