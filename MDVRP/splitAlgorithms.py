@@ -259,6 +259,7 @@ class SplitAlgorithms:
             totalDemand.append(0)
         t = 0
         j = n
+        i = n
         while i != 0:
             t += 1
             i = listPredecessors[j]

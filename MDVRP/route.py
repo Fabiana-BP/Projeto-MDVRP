@@ -4,7 +4,7 @@ Arquivo responsável por computar e verificar restrições da rota
 from distances import Distances as dist
 from customers import Customers as csts
 from depots import Depots as dpts
-
+import copy
 
 class Route:
     _tour = None
@@ -60,14 +60,22 @@ class Route:
         return self._tour.pop(index)
 
 
+    '''
+    Método troca o customer do índice informado pelo customer recebido
+    @param customer
+    @param índice do cliente a ser substituído
+    '''
+    def changeCustomer(self,customer,index):
+        self._tour[index] = customer
+
 
     '''
     Método calcula custo total da rota
     '''
     def calculeCost(self):
-        cost = 0
-        demand = 0
-        duration = 0
+        cost = 0.0
+        demand = 0.0
+        duration = 0.0
         length = len(self._tour)
 
         #custo do depósito ao primeiro cliente
@@ -81,18 +89,89 @@ class Route:
         demand += customer.get_demand()
         duration += customer.get_duration()
         #custo dos clientes intermediários
-        for i in range(1,length-1):
-            customer = self._tour[i]
-            nextCustomer = self._tour[i+1]
-            if i+1 < length-1:
+        for i in range(length):
+
+            if i+1 < length:
+                customer = self._tour[i]
+                nextCustomer = self._tour[i+1]
                 cost += dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),nextCustomer.get_x_coord(),nextCustomer.get_y_coord())
-            demand += customer.get_demand()
-            duration += customer.get_duration()
+            if i>0 and i<length-1:
+                demand += customer.get_demand()
+                duration += customer.get_duration()
 
         self._totalDemand = demand
         self._totalDuration = duration
         self._cost = cost
         self.updatePenalty()
+
+    '''
+    Método calcula custo ao trocar um ou mais nós da rota (será retirado elementos da listOld e acrescentados elementos da listNew na mesma posição)
+    @param lista de índices de clientes a serem substituídos
+    @param lista de clientes substitutos
+    @param rota
+    '''
+    def costShiftNodes(self,listIdOld,listNew,route):
+        controlCost = [] #[costTotal,cost,load,duration]
+        auxiliarRoute = copy.deepcopy(route)
+        #atualizar custo sem os individuos
+        for old in listIdOld:
+            controlCost = auxiliarRoute.costWithoutNode(old)
+            auxiliarRoute.popCustomer(old)
+            auxiliarRoute.set_cost(controlCost[1],controlCost[2],controlCost[3])
+        #calcular custo com os novos individuosprint(str(listIdOld))
+        for new in listNew:
+
+            controlCost = auxiliarRoute.costWithNode(new,listIdOld[0])
+            auxiliarRoute.insertCustomer(new,listIdOld[0])
+            auxiliarRoute.set_cost(controlCost[1],controlCost[2],controlCost[3])
+
+        return controlCost
+
+
+    '''
+    Método calcula custo ao trocar um ou mais nós de uma mesma rota (será trocado elementos da listIdSwap1 pelos da listIdSwap2)
+    @param lista de índices de clientes 1
+    @param lista de índices de clientes 2
+    @param rota
+    @return [custo total,rota]
+    '''
+    def costShiftNodesSameRoute(self,listIdSwap1,listIdSwap2,route):
+        # print("listIdSwap1")
+        # print(str(listIdSwap1))
+        # print("listIdSwap2")
+        # print(str(listIdSwap2))
+        auxiliarRoute = copy.deepcopy(route)
+        a = listIdSwap1
+        b = listIdSwap2
+        if listIdSwap1[0]>listIdSwap2[0]:
+            a = listIdSwap2
+            b = listIdSwap1
+
+
+        for i in a:
+            auxiliarRoute.changeCustomer(-1,i)
+        for i in b:
+            auxiliarRoute.changeCustomer(-1,i)
+        j = b[0]
+        for i in a:
+            auxiliarRoute.insertCustomer(route.get_tour()[i],j)
+            j += 1
+        j = a[0]
+        for i in b:
+            auxiliarRoute.insertCustomer(route.get_tour()[i],j)
+            j += 1
+
+        #remover -1
+        for i,cst in enumerate(auxiliarRoute.get_tour()):
+            if cst == -1:
+                auxiliarRoute.popCustomer(i)
+
+        auxiliarRoute.startValues()
+        auxiliarRoute.calculeCost()
+        #print("auxiliar route")
+        #print(auxiliarRoute)
+        return [auxiliarRoute.get_totalCost(),auxiliarRoute]
+
 
 
     '''
@@ -106,27 +185,76 @@ class Route:
         duration = self._totalDuration + customer.get_duration()
         length = len(self._tour)
 
+        if length == 0: #lista vazia:
+            cost = 2 * dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+            load = customer.get_demand()
+            duration = customer.get_duration()
         #verificar se ele ligará ao depósito
-        if index == 0:
-            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord())
-            + dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
-            + dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord())
+        elif index == 0:
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord()) + \
+            dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord()) + \
+            dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord())
         elif index == length:
-            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[length-1].get_x_coord(),self._tour[length-1].get_y_coord())
-            + dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
-            + dist.euclidianDistance(self._tour[length-1].get_x_coord(),self._tour[length-1].get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[length-1].get_x_coord(),self._tour[length-1].get_y_coord()) + \
+            dist.euclidianDistance(self._tour[length-1].get_x_coord(),self._tour[length-1].get_y_coord(),customer.get_x_coord(),customer.get_y_coord()) + \
+            dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
+
         #está entre dois clientes
         else:
-             cost = self._cost - dist.euclidianDistance(self._tour[index-1].get_x_coord(),self._tour[index-1].get_y_coord(),self._tour[index+1].get_x_coord(),self._tour[index+1].get_y_coord())
-             + dist.euclidianDistance(self._tour[index-1].get_x_coord(),self._tour[index-1].get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
-             + dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[index].get_x_coord(),self._tour[index].get_y_coord())
+             cost = self._cost - dist.euclidianDistance(self._tour[index-1].get_x_coord(),self._tour[index-1].get_y_coord(),self._tour[index].get_x_coord(),self._tour[index].get_y_coord()) + \
+             dist.euclidianDistance(self._tour[index-1].get_x_coord(),self._tour[index-1].get_y_coord(),customer.get_x_coord(),customer.get_y_coord()) + \
+             dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[index].get_x_coord(),self._tour[index].get_y_coord())
 
         #verificar se há penalizações
         costTotal = cost
         if load > self._depot.get_loadVehicle():
-            costTotal += 1000 * load - self._depot.get_loadVehicle()
+            costTotal += 1000 * (load - self._depot.get_loadVehicle())
         if duration > self._depot.get_durationRoute():
-            costTotal += 1000 * duration - self._depot.get_durationRoute()
+            costTotal += 1000 * (duration - self._depot.get_durationRoute())
+
+        return [costTotal,cost,load,duration]
+
+    '''
+    Método calcula custo ao adicionar dois nós consecutivos a mais na rota
+    @param customer1, customer2, índice de inserção
+    @return lista [custo com penalização, custo sem penalização, carregamento total, duração total]
+    '''
+    def costWith2Nodes(self,customer1,customer2,index):
+        cost = 0.0
+        load = self._totalDemand + customer1.get_demand() + customer2.get_demand()
+        duration = self._totalDuration + customer1.get_duration() + customer2.get_duration()
+        length = len(self._tour)
+
+        #verificar se ele ligará ao depósito
+        if length == 0: #lista vazia:
+            cost = dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer1.get_x_coord(),customer1.get_y_coord()) + \
+            dist.euclidianDistance(customer1.get_x_coord(),customer1.get_y_coord(),customer2.get_x_coord(),customer2.get_y_coord()) + \
+            dist.euclidianDistance(customer2.get_x_coord(),customer2.get_y_coord(),self._depot.get_x_coord(),self._depot.get_y_coord())
+            load = customer1.get_demand() + customer2.get_demand()
+            duration = customer1.get_duration() + customer2.get_duration()
+        elif index == 0:
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord()) + \
+            dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer1.get_x_coord(),customer1.get_y_coord()) + \
+            dist.euclidianDistance(customer1.get_x_coord(),customer1.get_y_coord(),customer2.get_x_coord(),customer2.get_y_coord()) + \
+            dist.euclidianDistance(customer2.get_x_coord(),customer2.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord())
+        elif index == length:
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[length-1].get_x_coord(),self._tour[length-1].get_y_coord()) + \
+            dist.euclidianDistance(self._tour[length-1].get_x_coord(),self._tour[length-1].get_y_coord(),customer1.get_x_coord(),customer1.get_y_coord()) + \
+            dist.euclidianDistance(customer1.get_x_coord(),customer1.get_y_coord(),customer2.get_x_coord(),customer2.get_y_coord()) + \
+            dist.euclidianDistance(customer2.get_x_coord(),customer2.get_y_coord(),self._depot.get_x_coord(),self._depot.get_y_coord())
+        #está entre dois clientes
+        else:
+             cost = self._cost - dist.euclidianDistance(self._tour[index-1].get_x_coord(),self._tour[index-1].get_y_coord(),self._tour[index].get_x_coord(),self._tour[index].get_y_coord()) + \
+             dist.euclidianDistance(self._tour[index-1].get_x_coord(),self._tour[index-1].get_y_coord(),customer1.get_x_coord(),customer1.get_y_coord()) + \
+             dist.euclidianDistance(customer1.get_x_coord(),customer1.get_y_coord(),customer2.get_x_coord(),customer2.get_y_coord()) + \
+             dist.euclidianDistance(customer2.get_x_coord(),customer2.get_y_coord(),self._tour[index].get_x_coord(),self._tour[index].get_y_coord())
+
+        #verificar se há penalizações
+        costTotal = cost
+        if load > self._depot.get_loadVehicle():
+            costTotal += 1000 * (load - self._depot.get_loadVehicle())
+        if duration > self._depot.get_durationRoute():
+            costTotal += 1000 * (duration - self._depot.get_durationRoute())
 
         return [costTotal,cost,load,duration]
 
@@ -136,41 +264,81 @@ class Route:
     @param customer
     @return lista [custo com penalização, custo sem penalização, carregamento total, duração total]
     '''
-    def costWithoutNode(self,customer):
+    def costWithoutNode(self,indexCst):
         cost = 0.0
-        load = self._totalDemand - customer.get_demand()
-        duration = self._totalDuration - customer.get_duration()
+        load = self._totalDemand - self._tour[indexCst].get_demand()
+        duration = self._totalDuration - self._tour[indexCst].get_duration()
         length = len(self._tour)
 
         if length == 1:#só tem esse cliente
             return [0,0,0,0]
         #verificar se ele liga ao depósito
-        elif self._tour[0].get_id() == customer.get_id():
-            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
-            + dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[1].get_x_coord(),self._tour[1].get_y_coord())
-            - dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[1].get_x_coord(),self._tour[1].get_y_coord())
+        elif indexCst == 0:
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[indexCst].get_x_coord(),self._tour[indexCst].get_y_coord()) + \
+            dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[1].get_x_coord(),self._tour[1].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[indexCst].get_x_coord(),self._tour[indexCst].get_y_coord(),self._tour[1].get_x_coord(),self._tour[1].get_y_coord())
 
-        elif self._tour[length-1].get_id() == customer.get_id():
-            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
-            + dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[length-2].get_x_coord(),self._tour[length-2].get_y_coord())
-            - dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[length-2].get_x_coord(),self._tour[length-2].get_y_coord())
+        elif indexCst == length-1:
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[indexCst].get_x_coord(),self._tour[indexCst].get_y_coord()) + \
+            dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[length-2].get_x_coord(),self._tour[length-2].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[indexCst].get_x_coord(),self._tour[indexCst].get_y_coord(),self._tour[length-2].get_x_coord(),self._tour[length-2].get_y_coord())
         #está entre dois clientes
         else:
-            for i,cst in enumerate(self._tour):
-                if cst.get_id() == customer.get_id():
-                    cost = self._cost - dist.euclidianDistance(self._tour[i-1].get_x_coord(),self._tour[i-1].get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
-                    - dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._tour[i+1].get_x_coord(),self._tour[i+1].get_y_coord())
-                    + dist.euclidianDistance(self._tour[i-1].get_x_coord(),self._tour[i-1].get_y_coord(),self._tour[i+1].get_x_coord(),self._tour[i+1].get_y_coord())
-                    break
+            cost = self._cost - dist.euclidianDistance(self._tour[indexCst-1].get_x_coord(),self._tour[indexCst-1].get_y_coord(),self._tour[indexCst].get_x_coord(),self._tour[indexCst].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[indexCst].get_x_coord(),self._tour[indexCst].get_y_coord(),self._tour[indexCst+1].get_x_coord(),self._tour[indexCst+1].get_y_coord()) + \
+            dist.euclidianDistance(self._tour[indexCst-1].get_x_coord(),self._tour[indexCst-1].get_y_coord(),self._tour[indexCst+1].get_x_coord(),self._tour[indexCst+1].get_y_coord())
+
         #verificar se há penalizações
         costTotal = cost
         if load > self._depot.get_loadVehicle():
-            costTotal += 1000 * load - self._depot.get_loadVehicle()
+            costTotal += 1000 * (load - self._depot.get_loadVehicle())
         if duration > self._depot.get_durationRoute():
-            costTotal += 1000 * duration - self._depot.get_durationRoute()
+            costTotal += 1000 * (duration - self._depot.get_durationRoute())
 
-        return [costTotal,cost,load,duration ]
+        return [costTotal,cost,load,duration]
 
+
+    '''
+    Método calcula custo ao remover dois nós consecutivos da rota
+    Método vai ser chamado apenas se existirem os dois nós consecutivos
+    @param primeiro índice a ser removido
+    @return lista [custo com penalização, custo sem penalização, carregamento total, duração total]
+    '''
+    def costWithout2Nodes(self,indexFst):
+        cost = 0.0
+        load = self._totalDemand - self._tour[indexFst].get_demand() - self._tour[indexFst+1].get_demand()
+        duration = self._totalDuration - self._tour[indexFst].get_duration() - self._tour[indexFst+1].get_duration()
+        length = len(self._tour)
+
+        if length == 2:#só tem esse cliente
+            return [0,0,0,0]
+        #verificar se o primeiro liga ao depósito
+        elif indexFst == 0:
+            cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[0].get_x_coord(),self._tour[0].get_y_coord(),self._tour[1].get_x_coord(),self._tour[1].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[1].get_x_coord(),self._tour[1].get_y_coord(),self._tour[2].get_x_coord(),self._tour[2].get_y_coord()) + \
+            dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[2].get_x_coord(),self._tour[2].get_y_coord())
+
+        elif indexFst == length-2:
+            cost = self._cost - dist.euclidianDistance(self._tour[length-3].get_x_coord(),self._tour[length-3].get_y_coord(),self._tour[indexFst].get_x_coord(),self._tour[indexFst].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[indexFst].get_x_coord(),self._tour[indexFst].get_y_coord(),self._tour[indexFst+1].get_x_coord(),self._tour[indexFst+1].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[indexFst+1].get_x_coord(),self._tour[indexFst+1].get_y_coord(),self._depot.get_x_coord(),self._depot.get_y_coord()) + \
+            dist.euclidianDistance(self._tour[length-3].get_x_coord(),self._tour[length-3].get_y_coord(),self._depot.get_x_coord(),self._depot.get_y_coord())
+        #está entre dois clientes
+        else:
+
+            cost = self._cost - dist.euclidianDistance(self._tour[indexFst-1].get_x_coord(),self._tour[indexFst-1].get_y_coord(),self._tour[indexFst].get_x_coord(),self._tour[indexFst].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[indexFst].get_x_coord(),self._tour[indexFst].get_y_coord(),self._tour[indexFst+1].get_x_coord(),self._tour[indexFst+1].get_y_coord()) - \
+            dist.euclidianDistance(self._tour[indexFst+1].get_x_coord(),self._tour[indexFst+1].get_y_coord(),self._tour[indexFst+2].get_x_coord(),self._tour[indexFst+2].get_y_coord()) + \
+            dist.euclidianDistance(self._tour[indexFst-1].get_x_coord(),self._tour[indexFst-1].get_y_coord(),self._tour[indexFst+2].get_x_coord(),self._tour[indexFst+2].get_y_coord())
+        #verificar se há penalizações
+        costTotal = cost
+        if load > self._depot.get_loadVehicle():
+            costTotal += 1000 * (load - self._depot.get_loadVehicle())
+        if duration > self._depot.get_durationRoute():
+            costTotal += 1000 * (duration - self._depot.get_durationRoute())
+
+        return [costTotal,cost,load,duration]
 
 
     '''
@@ -208,7 +376,6 @@ class Route:
         self.updatePenalty()
 
 
-
     def get_tour(self):
         return self._tour
 
@@ -231,4 +398,5 @@ class Route:
         return "depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - duração total: {:10.4f} - rota: {}".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalDuration,str(self._tour))
 
     def __repr__(self):
-        return "depósito: {} - rota: {} - custo com penalização: {:10.4f}".format(self._depot.get_id(),str(self._tour),self.get_totalCost())
+        return "depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - duração total: {:10.4f} - rota: {}\n".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalDuration,str(self._tour))
+        #"depósito: {} - rota: {} - custo com penalização: {:10.4f}\n".format(self._depot.get_id(),str(self._tour),self.get_totalCost())

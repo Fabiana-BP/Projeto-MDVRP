@@ -27,8 +27,8 @@ class InitialPopulation:
         cluster = SplitDepots.GilletJohnson() #divisão por depósitos
         #individual = split.mountRoutes(cluster) #criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinearBounded(cluster) #criação de rotas por depósitos, individual é um Solution
-        if individual is not None and self.is_different(individual):
-            self._population.append(individual)
+        #if individual is not None and self.is_different(individual):
+        self._population.append(individual)
 
         #formação de rotas aleatórias
         for i in range(2*size):
@@ -43,6 +43,7 @@ class InitialPopulation:
                 self._population.append(individual)
 
         self._population = sorted(self._population, key = Solution.get_cost)
+
         for i in self._population:
             print(i)
 

@@ -36,7 +36,7 @@ def main():
     for cst in Customers.get_customersList():
         print(cst)
         print(Customers.get_customersList()[cst].get_neighborsDistances())
-        '''
+    '''
 
     ga = GA()
     ga.GA()

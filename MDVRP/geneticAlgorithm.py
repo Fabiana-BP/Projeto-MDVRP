@@ -4,6 +4,7 @@ from splitDepots import SplitDepots
 from splitAlgorithms import SplitAlgorithms as split
 from mutation import Mutation
 import numpy as np
+import config
 
 class GeneticAlgorithm:
 
@@ -13,7 +14,7 @@ class GeneticAlgorithm:
     def GA(self):
         #define população inicial
         pop = InitialPopulation()
-        population = pop.definePopulation(100)
+        population = pop.definePopulation(config.SIZE_POPULATION)
         #avalie a população
 
         #critério de parada
@@ -28,6 +29,7 @@ class GeneticAlgorithm:
         P2 = menor(aux1,aux2)
             #Crossover
         rand = np.random.random()
+        print(rand)
         child = []
         if rand>0.5:
             child = cross.OBX(P1,P2)
@@ -35,13 +37,15 @@ class GeneticAlgorithm:
             child = cross.PMX(P1,P2)
         cluster = SplitDepots.splitByDepot(child)
         individual = split.splitLinearBounded(cluster)
-        print(P1)
-        print(P2)
-        print(individual)
+        # print(P1)
+        # print(P2)
+        # print(individual)
 
             #Mutação
-        individual = Mutation.M1(individual)
-        print(individual)
+        individual = Mutation.mutation(individual)
+        #print(individual)
+
+
             #avalie a população
 
             #defina a população sobrevivente

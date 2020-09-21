@@ -5,6 +5,7 @@ from distances import Distances as dist
 import numpy as np
 import math
 import copy
+import config
 
 class SplitDepots:
     _availableDepots = []
@@ -21,7 +22,7 @@ class SplitDepots:
         SplitDepots._individual = Solution()
         nDepots = len(depots)
         base = len(customers)/float(nDepots)
-        maxCustomers = int(1.05 * base)
+        maxCustomers = round(config.FRAC_MAX_DISTRIBUTION * base)
         #dividir em n grupos de clientes
         aux = nDepots
         for n in depots.values():
@@ -70,7 +71,7 @@ class SplitDepots:
         depots = dpts.get_depotsList() #dicionário
         nDepots = len(depots)
         base = len(customersList)/float(nDepots)
-        maxCustomers = int(1.05 * base)
+        maxCustomers = round(config.FRAC_MAX_DISTRIBUTION * base)
 
         nCustomers = len(keysCst)
         solution = {}
@@ -88,8 +89,7 @@ class SplitDepots:
             dpt = customer.get_depotsDistances()[i]
             cont = len(customer.get_depotsDistances())
             aux = 0
-            while (control[str(dpt[0])][0] > depots[str(dpt[0])].get_loadTotal()+ 0.0001 or control[str(dpt[0])][1] > depots[str(dpt[0])].get_durationTotal() or (cont>1 and control[str(dpt[0])][2] > maxCustomers)) and cont>0:
-
+            while (control[str(dpt[0])][0] >= depots[str(dpt[0])].get_loadTotal()+ 0.0001 or control[str(dpt[0])][1] >= depots[str(dpt[0])].get_durationTotal() or (cont>1 and control[str(dpt[0])][2] > maxCustomers)) and cont>0:
                 if cont == 1:
                     aux = 1 #indica que todos os depósitos anteriores estão lotados
                 i += 1
@@ -131,7 +131,7 @@ class SplitDepots:
                 control[str(dpt[0])][1] = control[str(dpt[0])][1] + close.get_duration()
                 control[str(dpt[0])][2] = control[str(dpt[0])][2] + 1
 
-                if (control[str(dpt[0])][0] <= depot.get_loadTotal() + 0.0001 and control[str(dpt[0])][1] <= (depot.get_durationTotal()) and control[str(dpt[0])][2] < maxCustomers) or aux ==1:
+                if (control[str(dpt[0])][0] <= depot.get_loadTotal() + 0.0001 and control[str(dpt[0])][1] <= (depot.get_durationTotal()) and control[str(dpt[0])][2] <= maxCustomers) or aux == 1:
                     #adicionar vizinho mais próximo a solução
                     SplitDepots._individual.addGiantTour(close,depot)
                     del keysCst[id] #atualizar lista
@@ -163,11 +163,11 @@ class SplitDepots:
         customersList = copy.deepcopy(csts.get_customersList()) #dicionário
 
         for dpt in dpts.get_depotsList():
-            SplitDepots._availableDepots.append([dpt,dpts.get_depotsList()[dpt].get_loadTotal(),0.0]) #depósito, carga totaL,demanda total atendida
+            SplitDepots._availableDepots.append([dpt,dpts.get_depotsList()[dpt].get_loadTotal(),0.0,0]) #depósito, carga totaL,demanda total atendida,clientes alocados
 
         unallocatedCustomers = SplitDepots.GilletJohnsonProcedure(customersList,len(SplitDepots._availableDepots))
-
-        #print(Split_algorithms._individual)
+        #print("verificando")
+        #print(SplitDepots._individual)
         return SplitDepots._individual
 
 
@@ -176,15 +176,19 @@ class SplitDepots:
         numberDepotsAvailable = nDepotsAvailable
         depots = dpts.get_depotsList()
         auxiliar = []
-
+        base = len(csts.get_customersList())/float(len(depots))
+        maxCustomers = round(config.FRAC_MAX_DISTRIBUTION * base)
+        #print("maxCustomers:")
+        #print(maxCustomers)
+        #print(unallocatedCustomers)
         for cst in unallocatedCustomers:
             depotsDistances = unallocatedCustomers[cst].get_depotsDistances()
             depotsAvailable = []
             # recuperar apenas depósitos com vagas
-            i=0
             for adpts in SplitDepots._availableDepots:
-                if str(depotsDistances[i][0]) == str(adpts[0]):
-                    depotsAvailable.append(depotsDistances[i])
+                for dptDist in depotsDistances:
+                    if adpts[0] == str(dptDist[0]):
+                        depotsAvailable.append(dptDist)
 
             if len(depotsAvailable) > 1:
                 fstDepot = depotsAvailable[0] #primeiro depósito mais próximo
@@ -198,24 +202,29 @@ class SplitDepots:
                 ratio = 1.0
                 auxiliar.append([unallocatedCustomers[cst],ratio,str(fstDepot[0])])
 
-            i += 1
 
         # ordenar lista auxiliar em ordem descrescente
         pts = sorted(auxiliar, key = lambda x: x[1],reverse=True)
-
+        #print("pts:")
+        #print(pts)
+        #print(SplitDepots._individual)
         for dpt in SplitDepots._availableDepots:
             control = 0
             for pt in pts:
                 if dpt[0] == pt[2]:
-                    dpt[2] += pt[0].get_demand()
-                    if (dpt[2] > dpt[1]): # demanda total > carga total (considera cheio)
+                    dpt[2] = dpt[2] + pt[0].get_demand()
+                    dpt[3] = dpt[3] + 1
+                    if (dpt[2] > dpt[1] or dpt[3] > maxCustomers): # demanda total > carga total (considera cheio)
                         if numberDepotsAvailable > 1: #se ainda faltarem clientes para serem alocados e restar apenas 1 depósito, a carga total será desrespeitada
-                            dpt[2] -= pt[0].get_demand()
-                            print("é menor")
+                            dpt[2] = dpt[2] - pt[0].get_demand()
+                            dpt[3] = dpt[3] - 1
+
                             dpt[0] = "-1"
                             numberDepotsAvailable -= 1
-
+                            #print("é menor")
                         else:
+                            #print("último depósito disponível")
+                            #print(SplitDepots._availableDepots)
                             #adiciona o cliente no depósito mais próximo
                             SplitDepots._individual.addGiantTour(pt[0],depots[dpt[0]])
                             #remove da lista de unallocatedCustomers
@@ -232,6 +241,7 @@ class SplitDepots:
         #print(":")
         #print(Split_algorithms._availableDepots)
         #print(unallocatedCustomers)
+        #print(SplitDepots._availableDepots)
         if len(unallocatedCustomers)>0:
             return SplitDepots.GilletJohnsonProcedure(unallocatedCustomers,numberDepotsAvailable)
         else:

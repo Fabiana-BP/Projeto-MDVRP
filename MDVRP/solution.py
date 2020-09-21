@@ -110,5 +110,4 @@ class Solution:
         if self._infeasible:
             aux = "inviável"
 
-        return str(self._cost) + " - " + aux
-        #"giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux
+        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux
