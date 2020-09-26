@@ -11,7 +11,7 @@ class Crossover:
         P2 = individual2.get_giantTour()
         pos0 = np.random.randint(0,len(P1)-1) #posição inicial a ser copiada de P1
         posF = np.random.randint(pos0+1,len(P1)) #posição final a ser copiada de P1
-        print("pos0: "+str(pos0)+" posF: "+str(posF))
+        #print("pos0: "+str(pos0)+" posF: "+str(posF))
 
         child =[-1 for x in range(len(P1))] #é um giant_tour sem depósitos associados
 
@@ -41,7 +41,7 @@ class Crossover:
         P2 = individual2.get_giantTour()
         pos0 = np.random.randint(0,len(P1)-1) #posição inicial a ser copiada de P1
         posF = np.random.randint(pos0+1,len(P1)) #posição final a ser copiada de P1
-        print("pos0: "+str(pos0)+" posF: "+str(posF))
+        #print("pos0: "+str(pos0)+" posF: "+str(posF))
 
         child =[-1 for x in range(len(P1))] #é um giant_tour sem depósitos associados
         #copiar a parte selecionada de P1 para child

@@ -25,6 +25,13 @@ class Solution:
             self._infeasible = True
         self._routes.append(route)
 
+    '''
+    Método remove uma rota
+    '''
+    def removeRoutesEmpty(self):
+        self._routes = list(filter(lambda x: [] != x.get_tour(), self._routes))
+        #print(self._routes)
+
 
     '''
     Método concatena as rotas em uma única lista (giantTour)
@@ -110,4 +117,14 @@ class Solution:
         if self._infeasible:
             aux = "inviável"
 
-        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux
+        return "\ncusto: " + str(self._cost) + " - " + aux
+        #"giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux
+
+
+    def __repr__(self):
+        aux =""
+        if self._infeasible:
+            aux = "inviável"
+
+        return "\ncusto: " + str(self._cost) + " - " + aux
+        #"giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux +"\n"

@@ -61,6 +61,18 @@ class Route:
 
 
     '''
+    Método remove um elemento da lista (cliente)
+    @param cliente a ser removido
+    '''
+    def removeCustomer(self,customer):
+        try:
+            self._tour.remove(customer)
+        except Exception as e:
+            raise ""
+
+
+
+    '''
     Método troca o customer do índice informado pelo customer recebido
     @param customer
     @param índice do cliente a ser substituído
@@ -111,19 +123,23 @@ class Route:
     @param rota
     '''
     def costShiftNodes(self,listIdOld,listNew,route):
+        #print(route)
+        #print(listIdOld)
+        #print(listNew)
         controlCost = [] #[costTotal,cost,load,duration]
         auxiliarRoute = copy.deepcopy(route)
         #atualizar custo sem os individuos
-        for old in listIdOld:
-            controlCost = auxiliarRoute.costWithoutNode(old)
-            auxiliarRoute.popCustomer(old)
+        for i in range(len(listIdOld)):
+            controlCost = auxiliarRoute.costWithoutNode(listIdOld[0])
+            auxiliarRoute.popCustomer(listIdOld[0])
             auxiliarRoute.set_cost(controlCost[1],controlCost[2],controlCost[3])
-        #calcular custo com os novos individuosprint(str(listIdOld))
+        #calcular custo com os novos individuos
+        i = listIdOld[0]
         for new in listNew:
-
-            controlCost = auxiliarRoute.costWithNode(new,listIdOld[0])
-            auxiliarRoute.insertCustomer(new,listIdOld[0])
+            controlCost = auxiliarRoute.costWithNode(new,i)
+            auxiliarRoute.insertCustomer(new,i)
             auxiliarRoute.set_cost(controlCost[1],controlCost[2],controlCost[3])
+            i += 1
 
         return controlCost
 
@@ -162,15 +178,48 @@ class Route:
             j += 1
 
         #remover -1
-        for i,cst in enumerate(auxiliarRoute.get_tour()):
-            if cst == -1:
-                auxiliarRoute.popCustomer(i)
+        while -1 in auxiliarRoute.get_tour():
+            auxiliarRoute.removeCustomer(-1)
 
         auxiliarRoute.startValues()
         auxiliarRoute.calculeCost()
         #print("auxiliar route")
         #print(auxiliarRoute)
         return [auxiliarRoute.get_totalCost(),auxiliarRoute]
+
+
+    '''
+    Método substitui dois pares por outros dois
+    @param rota que sofrerá as mudanças
+    @param lista1 de índices de clientes que serão substituídos (clientes consecutivos)
+    @param replaceWith1 lista de clientes substitutos de lista1
+    @param opcional lista2 de índices de clientes que serão substituídos (clientes consecutivos)
+    @param opcional replaceWith2 lista de clientes substitutos de lista2
+    @return [custo total,rota]
+    '''
+    def costReplaceNodes(self,route,old1,replaceWith1,old2=[],replaceWith2=[]):
+        auxiliarRoute = copy.deepcopy(route)
+        a = old1
+        b = old2
+
+        j = 0
+        #trocando os pares
+        for i in a:
+            repl = replaceWith1[j]
+            auxiliarRoute.changeCustomer(repl,i)
+            j += 1
+        if len(old2)>0 and len(replaceWith2)>0:
+            j = 0
+            for i in b:
+                repl = replaceWith2[j]
+                auxiliarRoute.changeCustomer(repl,i)
+                j += 1
+
+        auxiliarRoute.startValues()
+        auxiliarRoute.calculeCost()
+        return [auxiliarRoute.get_totalCost(),auxiliarRoute]
+
+
 
 
 
@@ -347,11 +396,13 @@ class Route:
     def updatePenalty(self):
         # se infrigir a restrição vai sofrer acréscimo de 1.000 x excedente
         capacity =  float(self._depot.get_loadVehicle())
+        self._infeasible = False
         if self._totalDemand > capacity:
             self._penaltyDemand = 1000 * (self._totalDemand - capacity)
             self._infeasible = True
         else:
             self._penaltyDemand = 0.0
+
 
         duration = float(self._depot.get_durationRoute())
         #print(duration)
