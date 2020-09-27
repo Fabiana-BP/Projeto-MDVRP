@@ -64,6 +64,8 @@ class Customer:
     def set_neighborsDistances(self,neighborsDistances):
         self._neighborsDistances = neighborsDistances
 
+    def __eq__(self,other_customer):
+        return self._id == other_customer.get_id()
 
 
     def __str__(self):

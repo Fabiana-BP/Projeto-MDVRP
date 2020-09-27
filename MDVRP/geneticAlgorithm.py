@@ -18,7 +18,7 @@ class GeneticAlgorithm:
         #avalie a população
 
         #critério de parada
-        for i in range(100):
+        for i in range(200):
             #selecione os pais
 
             aux1 = population[np.random.randint(0,len(population))]
@@ -33,22 +33,26 @@ class GeneticAlgorithm:
 
             rand = np.random.random()
             # print(rand)
+            # print(P1)
+            # print(P2)
             child = []
             if rand>0.5:
                 child = cross.OBX(P1,P2)
             else:
                 child = cross.PMX(P1,P2)
+            # print("child: \n")
+            # print(child)
             cluster = SplitDepots.splitByDepot(child)
             individual = split.splitLinearBounded(cluster)
 
-            # print(P1)
-            # print(P2)
+            # print("individual: ")
             # print(individual)
 
             #Mutação
 
             individual = Mutation.mutation(individual)
-            #print("indivíduo: "+str(individual))
+            # print("individual: ")
+            # print("indivíduo: "+str(individual))
             #print(individual.get_routes())
             # pop.addIndividual(individual)
             # pop.sortPopulation()
@@ -58,15 +62,14 @@ class GeneticAlgorithm:
             if ok: #indivíduo diferente do resto da população
                 if len(population)<config.SIZE_POPULATION:
                     pop.addIndividual(individual)
-                    pop.sortPopulation()
                 else:
                     if pop.popIndividual(len(population)-1) != -1:
                         pop.addIndividual(individual)
-                        pop.sortPopulation()
                     else:
                         print("Indivíduo não foi removido da população")
                         exit(1)
-                population = pop.get_population()
+            pop.sortPopulation()
+            population = pop.get_population()
 
 
             #defina a população sobrevivente

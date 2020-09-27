@@ -16,10 +16,9 @@ class Mutation:
         #print(bestSolution)
         for i,m in enumerate(movimentation):
             solution1 = m(bestSolution)
+            # print(m)
             # print(solution1)
-            # if i>6:
-            #
-            #     print(solution1.get_routes())
+            # print(solution1.get_routes())
 
             if solution1.get_cost() < bestSolution.get_cost():
                 bestSolution = copy.deepcopy(solution1)

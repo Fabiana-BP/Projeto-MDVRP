@@ -4,6 +4,7 @@ Arquivo responsável por computar e verificar restrições da rota
 from distances import Distances as dist
 from customers import Customers as csts
 from depots import Depots as dpts
+from customer import Customer
 import copy
 
 class Route:
@@ -163,11 +164,12 @@ class Route:
             a = listIdSwap2
             b = listIdSwap1
 
-
+        aux = Customer()
+        aux.set_id(-1)
         for i in a:
-            auxiliarRoute.changeCustomer(-1,i)
+            auxiliarRoute.changeCustomer(aux,i)
         for i in b:
-            auxiliarRoute.changeCustomer(-1,i)
+            auxiliarRoute.changeCustomer(aux,i)
         j = b[0]
         for i in a:
             auxiliarRoute.insertCustomer(route.get_tour()[i],j)
@@ -178,8 +180,8 @@ class Route:
             j += 1
 
         #remover -1
-        while -1 in auxiliarRoute.get_tour():
-            auxiliarRoute.removeCustomer(-1)
+        while aux in auxiliarRoute.get_tour():
+            auxiliarRoute.removeCustomer(aux)
 
         auxiliarRoute.startValues()
         auxiliarRoute.calculeCost()
