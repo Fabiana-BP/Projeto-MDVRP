@@ -7,9 +7,9 @@ from solution import Solution
 import math
 import copy
 
+
 class SplitAlgorithms:
     _infinite = math.inf
-
 
     '''
     algoritmo adaptado de https://w1.cirrelt.ca/~vidalt/en/VRP-resources.html
@@ -17,9 +17,10 @@ class SplitAlgorithms:
     '''
     def splitLinearBounded(solution):
         solution1 = copy.deepcopy(solution)
+        solution2 = copy.deepcopy(solution)
         depotsList = dpts.get_depotsList()
-        customers = solution.get_giantTour()
-        depots = solution.get_depots()
+        customers = solution1.get_giantTour()
+        depots = solution1.get_depots()
         for dpt in depotsList:
             listCst = []
             depot = depotsList[dpt]
@@ -29,15 +30,17 @@ class SplitAlgorithms:
 
             sumDistance = [0.0 for x in range(len(listCst)+1)]
             sumLoad = [0.0 for x in range(len(listCst)+1)]
-            sumDistance[0] = 0 #distancia do depósito
-            #distância do depósito ao primeiro nó
-            sumDistance[1] = dist.euclidianDistance(listCst[0].get_x_coord(),listCst[0].get_y_coord(),depot.get_x_coord(),depot.get_y_coord())
+            sumDistance[0] = 0  # distancia do depósito
+            # distância do depósito ao primeiro nó
+            sumDistance[1] = dist.euclidianDistance(listCst[0].get_x_coord(
+            ), listCst[0].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
 
             sumLoad[0] = 0
             sumLoad[1] = customers[0].get_demand()
-            #inicializar com o somatório distancia de i-1 a i e a demanda de i-1 a i
-            for i in range(2,len(listCst)+1):
-                sumDistance[i] = sumDistance[i-1] +dist.euclidianDistance(listCst[i-2].get_x_coord(),listCst[i-2].get_y_coord(),listCst[i-1].get_x_coord(),listCst[i-1].get_y_coord())
+            # inicializar com o somatório distancia de i-1 a i e a demanda de i-1 a i
+            for i in range(2, len(listCst)+1):
+                sumDistance[i] = sumDistance[i-1] + dist.euclidianDistance(listCst[i-2].get_x_coord(
+                ), listCst[i-2].get_y_coord(), listCst[i-1].get_x_coord(), listCst[i-1].get_y_coord())
                 sumLoad[i] = sumLoad[i-1] + listCst[i-1].get_demand()
 
             potential = []
@@ -47,7 +50,6 @@ class SplitAlgorithms:
                 potential.append([1.e30 for x in range(len(listCst) + 1)])
                 pred.append([-1 for x in range(len(listCst) + 1)])
 
-
             potential[0][0] = 0
 
             for k in range(depot.get_numberVehicles()):
@@ -55,172 +57,175 @@ class SplitAlgorithms:
                 i = k+1
                 while (i <= len(listCst)) and (len(queue) > 0):
                     # o primeiro da fila será o melhor predecessor de i
-                    potential[k+1][i] = SplitAlgorithms.propagate(queue[0],i,k,listCst,sumDistance,potential,depot) #calcula custo de i a j
+                    potential[k+1][i] = SplitAlgorithms.propagate(
+                        queue[0], i, k, listCst, sumDistance, potential, depot)  # calcula custo de i a j
                     pred[k+1][i] = queue[0]
 
-                    #se i não é dominado pelo último da pilha
+                    # se i não é dominado pelo último da pilha
                     if i < len(listCst):
-                        if not(SplitAlgorithms.dominates(queue[len(queue)-1],i,k,listCst,sumDistance,potential,sumLoad,depot)):
-                            #então i será inserido, precisando remover quem ele domina
-                            while len(queue)>0 and SplitAlgorithms.dominatesRight(queue[len(queue)-1],i,k,listCst,sumDistance,potential,depot):
+                        if not(SplitAlgorithms.dominates(queue[len(queue)-1], i, k, listCst, sumDistance, potential, sumLoad, depot)):
+                            # então i será inserido, precisando remover quem ele domina
+                            while len(queue) > 0 and SplitAlgorithms.dominatesRight(queue[len(queue)-1], i, k, listCst, sumDistance, potential, depot):
                                 del queue[len(queue)-1]
                             queue.append(i)
 
-                        #Verifica se a frente consegue chegar ao próximo nó, caso contrário ele desaparecerá.
-                        while len(queue)>0 and (sumLoad[i+1] - sumLoad[queue[0]]) > (depot.get_loadVehicle() + 0.0001):
+                        # Verifica se a frente consegue chegar ao próximo nó, caso contrário ele desaparecerá.
+                        while len(queue) > 0 and (sumLoad[i+1] - sumLoad[queue[0]]) > (depot.get_loadVehicle() + 0.0001):
                             del queue[0]
 
                     i += 1
 
             if potential[depot.get_numberVehicles()][len(listCst)] > 1.e29:
-                #print("ERRO: nenhuma solução de divisão foi propagada até o último nó")
-                return SplitAlgorithms.mountRoutes(solution1)
+                # print("ERRO: nenhuma solução de divisão foi propagada até o último nó")
+                del solution1
+                return SplitAlgorithms.mountRoutes(solution2)
 
             else:
-               #achando o número ótimo de rotas
+               # achando o número ótimo de rotas
                 minCost = 1.e30
                 nRoutes = 0
-                for k in range(1,depot.get_numberVehicles()+1):
+                for k in range(1, depot.get_numberVehicles()+1):
                     if potential[k][len(listCst)] < minCost:
                         minCost = potential[k][len(listCst)]
                         #print("minCost "+str(minCost))
                         nRoutes = k
 
                 cour = len(listCst)
-                for i in range(nRoutes-1,-1,-1):
+                for i in range(nRoutes-1, -1, -1):
                     route = Route(depot)
                     j = pred[i+1][cour]
                     for k in range(j+1, cour+1):
                         route.addCustomer(listCst[k-1])
                     cour = j
-                    #calcular custo da rota formada
+                    # calcular custo da rota formada
                     route.startValues()
                     route.calculeCost()
-                    solution.addRoutes(route)
+                    solution1.addRoutes(route)
 
-        solution.formGiantTour()
-        solution.calculateCost()
-        #print(solution)
-        return solution
-
-
-
+        solution1.formGiantTour()
+        solution1.calculateCost()
+        # print(solution)
+        return solution1
 
     '''
     Método calcula o custo de propagação de i até j
     '''
-    def propagate(i,j,k,listCst,sumDistance,potential,depot):
-        distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(),listCst[i].get_y_coord(),depot.get_x_coord(),depot.get_y_coord()) #distancia de i+1 até o depósito
-        distDeptJ = dist.euclidianDistance(listCst[j-1].get_x_coord(),listCst[j-1].get_y_coord(),depot.get_x_coord(),depot.get_y_coord()) #distancia de j até o depósito
+    def propagate(i, j, k, listCst, sumDistance, potential, depot):
+        distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(), listCst[i].get_y_coord(
+        ), depot.get_x_coord(), depot.get_y_coord())  # distancia de i+1 até o depósito
+        distDeptJ = dist.euclidianDistance(listCst[j-1].get_x_coord(), listCst[j-1].get_y_coord(
+        ), depot.get_x_coord(), depot.get_y_coord())  # distancia de j até o depósito
 
         return potential[k][i] + sumDistance[j] - sumDistance[i+1] + distDeptNextI + distDeptJ
 
     '''
     Método testa se i domina j como predecessor para todos os nós x> = j + 1
     '''
-    def dominates(i,j,k,listCst,sumDistance,potential,sumLoad,depot):
-        distDeptNextJ = dist.euclidianDistance(listCst[j].get_x_coord(),listCst[j].get_y_coord(),depot.get_x_coord(),depot.get_y_coord())
-        distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(),listCst[i].get_y_coord(),depot.get_x_coord(),depot.get_y_coord())
+    def dominates(i, j, k, listCst, sumDistance, potential, sumLoad, depot):
+        distDeptNextJ = dist.euclidianDistance(listCst[j].get_x_coord(
+        ), listCst[j].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+        distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(
+        ), listCst[i].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
 
         return sumLoad[i] == sumLoad[j] and (potential[k][j] + distDeptNextJ) > (potential[k][i] + distDeptNextI + sumDistance[j+1] - sumDistance[i+1] - 0.0001)
 
     '''
     Método testa se j domina i como predecessor para todos os nós x> = j + 1
     '''
-    def dominatesRight(i,j,k,listCst,sumDistance,potential,depot):
-        distDeptNextJ = dist.euclidianDistance(listCst[j].get_x_coord(),listCst[j].get_y_coord(),depot.get_x_coord(),depot.get_y_coord())
-        distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(),listCst[i].get_y_coord(),depot.get_x_coord(),depot.get_y_coord())
+    def dominatesRight(i, j, k, listCst, sumDistance, potential, depot):
+        distDeptNextJ = dist.euclidianDistance(listCst[j].get_x_coord(
+        ), listCst[j].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+        distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(
+        ), listCst[i].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
 
         return (potential[k][j] + distDeptNextJ) < (potential[k][i] + distDeptNextI + sumDistance[j+1] - sumDistance[i+1] + 0.0001)
-
-
-
 
     '''
     Método monta as rotas de cada depósito usando algoritmo proposto por Prins2004
     '''
     def mountRoutes(solution):
+        solution1 = copy.deepcopy(solution)
         allDepots = dpts.get_depotsList()
         numberDepots = dpts.get_numberDepots()
-        customers = solution.get_giantTour()
-        depots = solution.get_depots()
+        customers = solution1.get_giantTour()
+        depots = solution1.get_depots()
         numberVehicles = depots[0].get_numberVehicles()
         #print("customers: "+str(customers))
         #print("deposts: "+str(depots))
 
-        #depósitos já vem separados, utilizar heurística de Prins2004 para separar as rotas
+        # depósitos já vem separados, utilizar heurística de Prins2004 para separar as rotas
 
-        #separar conjuntos
+        # separar conjuntos
         for i in allDepots:
             depot = allDepots[i]
-            path=[]
+            path = []
             for j in range(len(customers)):
                 if str(depot.get_id()) == str(depots[j].get_id()):
                     path.append(customers[j])
             #print("path: "+str(path))
-            #gerar rotas para cada caminho
-            pred = SplitAlgorithms.splitRoute(path, depot) #método retorna lista de predecessores
-            allroutes = SplitAlgorithms.extractVRP(pred,path) #método retorna lista de lista com rotas para um depósito (número máximo de veículos não delimitado)
-            #verificar número de rotas formadas
+            # gerar rotas para cada caminho
+            # método retorna lista de predecessores
+            pred = SplitAlgorithms.splitRoute(path, depot)
+            # método retorna lista de lista com rotas para um depósito (número máximo de veículos não delimitado)
+            allroutes = SplitAlgorithms.extractVRP(pred, path)
+            # verificar número de rotas formadas
 
             routes = []
             for l in allroutes:
-                if len(l)>0: #há rota
+                if len(l) > 0:  # há rota
                     routes.append(l)
             #print("routes: "+ str(routes))
-            #caso tenha mais rotas que veículos
+            # caso tenha mais rotas que veículos
             if len(routes) > numberVehicles:
-                routes = sorted(routes,key=lambda x: x[1]) #ordenada em ordem crescente de demanda
-                #juntar rotas com menor demanda
+                # ordenada em ordem crescente de demanda
+                routes = sorted(routes, key=lambda x: x[1])
+                # juntar rotas com menor demanda
                 aux = len(routes) - numberVehicles
-                while aux>0:
+                while aux > 0:
                     r0 = routes[0][0]
                     r1 = routes[1][0]
                     r0 = r0 + r1
                     demand = routes[0][1] + routes[1][1]
-                    routes[0]=[r0,demand]
+                    routes[0] = [r0, demand]
                     del routes[1]
-                    routes = sorted(routes,key=lambda x: x[1]) #ordenada em ordem crescente de demanda
+                    # ordenada em ordem crescente de demanda
+                    routes = sorted(routes, key=lambda x: x[1])
                     aux -= 1
 
-
-
-            k=-1
+            k = -1
             for l in routes:
                 route = Route(depot)
-                if len(l)>0:
+                if len(l) > 0:
                     for m in l[0]:
                         route.addCustomer(m)
                         k += 1
 
-                    #calcular custo da rota formada
+                    # calcular custo da rota formada
                     route.startValues()
                     route.calculeCost()
-                    solution.addRoutes(route)
-        solution.formGiantTour()
-        solution.calculateCost()
-        #print(solution)
-        return solution
-
-
+                    solution1.addRoutes(route)
+        solution1.formGiantTour()
+        solution1.calculateCost()
+        # print(solution1)
+        return solution1
 
     '''
     Método implementa split definido em Prins2004
     recebe como parâmetro caminho de um depósito
     '''
-    def splitRoute(path,depot):
+    def splitRoute(path, depot):
         n = len(path)
         vehicleCapacity = depot.get_loadVehicle()
         durationRoute = depot.get_durationRoute()
-        v = [] # custo do menor caminho do depósito até o ponto.
-        predecessor=[] #predecessores de cada idCsts neste caminho
-        predecessor.append(-1) #depósito não tem precedente
+        v = []  # custo do menor caminho do depósito até o ponto.
+        predecessor = []  # predecessores de cada idCsts neste caminho
+        predecessor.append(-1)  # depósito não tem precedente
         v.append(0.0)
         for i in range(n):
             v.append(SplitAlgorithms._infinite)
             predecessor.append("")
 
-        for i in range(1,n+1):
+        for i in range(1, n+1):
             load = 0.0
             cost = 0.0
             j = i
@@ -231,11 +236,13 @@ class SplitAlgorithms:
                 if i == j:
                     # custo de ida e volta
                     duration += customer.get_duration()
-                    cost = 2 * dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),depot.get_x_coord(),depot.get_y_coord()) + customer.get_duration()
+                    cost = 2 * dist.euclidianDistance(customer.get_x_coord(), customer.get_y_coord(
+                    ), depot.get_x_coord(), depot.get_y_coord()) + customer.get_duration()
                 else:
                     duration += customer.get_duration()
                     previewCustomer = path[j-2]
-                    cost = cost - dist.euclidianDistance(previewCustomer.get_x_coord(),previewCustomer.get_y_coord(),depot.get_x_coord(),depot.get_y_coord()) + dist.euclidianDistance(previewCustomer.get_x_coord(),previewCustomer.get_y_coord(),customer.get_x_coord(),customer.get_y_coord()) + customer.get_duration() + dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),depot.get_x_coord(),depot.get_y_coord())
+                    cost = cost - dist.euclidianDistance(previewCustomer.get_x_coord(), previewCustomer.get_y_coord(), depot.get_x_coord(), depot.get_y_coord()) + dist.euclidianDistance(previewCustomer.get_x_coord(
+                    ), previewCustomer.get_y_coord(), customer.get_x_coord(), customer.get_y_coord()) + customer.get_duration() + dist.euclidianDistance(customer.get_x_coord(), customer.get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
 
                 if (load <= vehicleCapacity) and (duration <= durationRoute):
                     if (v[i-1] + cost) < v[j]:
@@ -243,7 +250,6 @@ class SplitAlgorithms:
                         predecessor[j] = i-1
                     j += 1
         return predecessor
-
 
     '''
     Método para extrair a solução VRP do vetor P
@@ -254,20 +260,21 @@ class SplitAlgorithms:
         trip = []
         totalDemand = []
         n = len(listPredecessors) - 1
-        for i in range(1,n+1):
+        for i in range(n+1):
             trip.append([])
             totalDemand.append(0)
         t = 0
         j = n
         i = n
-        while i != 0:
+        while i > 0:
             t += 1
             i = listPredecessors[j]
             sumDemand = 0
             trp = []
-            for k in range (i+1, j+1):
+            for k in range(i+1, j+1):
                 trp.append(listCustomers[k-1])
                 sumDemand += listCustomers[k-1].get_demand()
+
             trip[t] = [trp, sumDemand]
             j = i
 

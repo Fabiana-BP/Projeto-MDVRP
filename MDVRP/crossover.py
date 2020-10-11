@@ -35,10 +35,11 @@ class Crossover:
 
         rand = np.random.random()
         # print(child)
-        if rand > 0.5:
-            return child[0]
-        else:
-            return child[1]
+        return child
+        # if rand > 0.5:
+        #     return child[0]
+        # else:
+        #     return child[1]
 
 
 
@@ -102,7 +103,8 @@ class Crossover:
         # print("child")
         # print(str(child))
         rand = np.random.random()
-        if rand > 0.5:
-            return child[0]
-        else:
-            return child[1]
+        # if rand > 0.5:
+        #     return child[0]
+        # else:
+        #     return child[1]
+        return child

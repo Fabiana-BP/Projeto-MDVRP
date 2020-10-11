@@ -118,7 +118,7 @@ class Route:
         self.updatePenalty()
 
     '''
-    Método calcula custo ao trocar um ou mais nós da rota (será retirado elementos da listOld e acrescentados elementos da listNew na mesma posição)
+    Método calcula custo ao trocar um ou mais nós da rota (será retirado elementos da listOld (consecutivos) e acrescentados elementos da listNew na mesma posição)
     @param lista de índices de clientes a serem substituídos
     @param lista de clientes substitutos
     @param rota
@@ -141,12 +141,12 @@ class Route:
             auxiliarRoute.insertCustomer(new,i)
             auxiliarRoute.set_cost(controlCost[1],controlCost[2],controlCost[3])
             i += 1
-
+        del auxiliarRoute
         return controlCost
 
 
     '''
-    Método calcula custo ao trocar um ou mais nós de uma mesma rota (será trocado elementos da listIdSwap1 pelos da listIdSwap2)
+    Método calcula custo ao trocar um ou mais nós de uma mesma rota (será trocado elementos da listIdSwap1 (consecutivos) pelos da listIdSwap2)
     @param lista de índices de clientes 1
     @param lista de índices de clientes 2
     @param rota
@@ -361,7 +361,7 @@ class Route:
         duration = self._totalDuration - self._tour[indexFst].get_duration() - self._tour[indexFst+1].get_duration()
         length = len(self._tour)
 
-        if length == 2:#só tem esse cliente
+        if length == 2:#só tem esses 2 clientes
             return [0,0,0,0]
         #verificar se o primeiro liga ao depósito
         elif indexFst == 0:

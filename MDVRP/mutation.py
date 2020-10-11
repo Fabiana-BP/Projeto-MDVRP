@@ -12,10 +12,23 @@ class Mutation:
     '''
     def mutation(solution):
         movimentation = [Mutation.M1, Mutation.M2, Mutation.M3, Mutation.M4, Mutation.M5, Mutation.M6, Mutation.M7, Mutation.M8, Mutation.M9]
+        bestSolution = None
         bestSolution = copy.deepcopy(solution)
-        #print(bestSolution)
+        
+        # print("vai mudar")
+        # print(bestSolution.get_routes())
         for i,m in enumerate(movimentation):
+            # print(m)
+            # print(solution)
+            # print(solution.get_routes())
+            solution1 = None
             solution1 = m(bestSolution)
+            # tour = solution.get_giantTour()
+            # for i, c1 in enumerate(tour):
+            #     for j, c2 in enumerate(tour):
+            #         if i != j and c1 == c2:
+            #             print("Elementos iguais na mutação")
+            #             exit(1)
             # print(m)
             # print(solution1)
             # print(solution1.get_routes())
@@ -35,17 +48,21 @@ class Mutation:
     Método aplica a regra: Se u for um nó cliente, remova u e insira-o após v
     '''
     def M1(solution):
+        solution1 = None
         solution1 = copy.deepcopy(solution)
+        # print(solution1.get_routes())
         for routeU in solution1.get_routes():
             for i,u in enumerate(routeU.get_tour()):
-                #verificar se há melhora na solução com o procedimento
                 costRouteU = routeU.costWithoutNode(i)
-
                 for routeV in solution1.get_routes():
                     for j,v in enumerate(routeV.get_tour()):
-                        if u is not v: #se eles são diferentes
+                        if u != v: #se eles são diferentes
+                            
                             indJ = j
+                            # print(u)
+                            # print(v)
                             if routeV is routeU: #pertencem a mesma rota
+                                # print("mesma rota")
                                 auxRouteU = copy.deepcopy(routeU)
                                 auxRouteU.popCustomer(i)
                                 auxRouteU.set_cost(costRouteU[1],costRouteU[2],costRouteU[3])
@@ -54,6 +71,7 @@ class Mutation:
                                 costRouteV = auxRouteU.costWithNode(u,indJ+1)
                                 newCost = solution.get_cost() - routeU.get_totalCost() + costRouteV[0]
                             else:
+                                # print("rotas diferentes")
                                 costRouteV = routeV.costWithNode(u,indJ+1)
                                 newCost = solution.get_cost() - routeU.get_totalCost() - routeV.get_totalCost() + costRouteU[0] + costRouteV[0]
 
@@ -69,10 +87,13 @@ class Mutation:
                                 #atualizar giantTour
                                 solution1.formGiantTour()
                                 solution1.calculateCost()
+                                # print("rotas")
+                                del auxRouteU
                                 return solution1
 
                     #caso v seja o depósito
                     if routeV is routeU: #pertencem a mesma rota
+                        auxRoute = None
                         auxRouteU = copy.deepcopy(routeU)
                         auxRouteU.popCustomer(i)
                         auxRouteU.set_cost(costRouteU[1],costRouteU[2],costRouteU[3])
@@ -83,6 +104,7 @@ class Mutation:
                         newCost = solution.get_cost() - routeU.get_totalCost() - routeV.get_totalCost() + costRouteU[0] + costRouteV[0]
                     #melhora a solução:
                     if newCost < solution.get_cost():
+                        # print("no depósito")
                         #remove u
                         U = routeU.popCustomer(i)
                         #insere u após v
@@ -93,8 +115,9 @@ class Mutation:
                         #atualizar giantTour
                         solution1.formGiantTour()
                         solution1.calculateCost()
+                        del auxRouteU
                         return solution1
-
+        del auxRouteU
         return solution
 
     '''
@@ -116,17 +139,14 @@ class Mutation:
     '''
     def M2orM3(solution,type):
         solution1 = copy.deepcopy(solution)
+        # print(solution1)
         for routeU in solution1.get_routes():
             for i,u in enumerate(routeU.get_tour()):
-                #verificar se há melhora na solução com o procedimento
                 if i+1 < len(routeU.get_tour()):
                     costRouteU = routeU.costWithout2Nodes(i)
-
-                    auxRouteU = copy.deepcopy(routeU)
                     for routeV in solution1.get_routes():
                         for j,v in enumerate(routeV.get_tour()):
                             if u is not v and routeU.get_tour()[i+1] is not v: #se u e x são diferentes de v
-
                                 indJ = j
                                 if routeU is routeV: #se pertencem a mesma rota:
                                     if j>i:
@@ -143,6 +163,7 @@ class Mutation:
                                         print("ERROR - método incorreto")
                                         exit(1)
                                     newCost = solution.get_cost() - routeU.get_totalCost() + costRouteV[0]
+                                    del auxRouteU
                                 else:
                                     if type.upper() == "M2":
                                         costRouteV = routeV.costWith2Nodes(u,routeU.get_tour()[i+1],indJ+1)
@@ -177,25 +198,27 @@ class Mutation:
                                     return solution1
 
                         #caso v seja o depósito
+                        auxRouteU = copy.deepcopy(routeU)
                         if type.upper() == "M2":
+                            # print(auxRouteU)
                             if routeU is routeV: #se pertencem a mesma rota:
-                                auxRouteU = copy.deepcopy(routeU)
                                 auxRouteU.popCustomer(i)
                                 auxRouteU.popCustomer(i)
                                 auxRouteU.set_cost(costRouteU[1],costRouteU[2],costRouteU[3])
                                 costRouteV = auxRouteU.costWith2Nodes(u,routeU.get_tour()[i+1],0)
                                 newCost = solution.get_cost() - routeU.get_totalCost() + costRouteV[0]
+                                del auxRouteU
                             else:
                                 costRouteV = routeV.costWith2Nodes(u,routeU.get_tour()[i+1],0)
                                 newCost = solution.get_cost() - routeU.get_totalCost() - routeV.get_totalCost() + costRouteU[0] + costRouteV[0]
                         else:
                             if routeU is routeV: #se pertencem a mesma rota:
-                                auxRouteU = copy.deepcopy(routeU)
                                 auxRouteU.popCustomer(i)
                                 auxRouteU.popCustomer(i)
                                 auxRouteU.set_cost(costRouteU[1],costRouteU[2],costRouteU[3])
                                 costRouteV = auxRouteU.costWith2Nodes(routeU.get_tour()[i+1],u,0)
                                 newCost = solution.get_cost() - routeU.get_totalCost() + costRouteV[0]
+                                del auxRouteU
                             else:
                                 costRouteV = routeV.costWith2Nodes(routeU.get_tour()[i+1],u,0)
                                 newCost = solution.get_cost() - routeU.get_totalCost() - routeV.get_totalCost() + costRouteU[0] + costRouteV[0]
@@ -220,8 +243,9 @@ class Mutation:
                             #atualizar giantTour
                             solution1.formGiantTour()
                             solution1.calculateCost()
+                            
                             return solution1
-
+        
         return solution
 
 
@@ -275,6 +299,7 @@ class Mutation:
                                         break
                                 elif type.upper() == "M6":
                                     if i+1 < len(routeU.get_tour()) and j+1 < len(routeV.get_tour()):
+                                        # print("Não devia entrar aqui")
                                         listIdOld = [i,i+1]
                                         listNew = [v,routeV.get_tour()[j+1]]
                                     else:
@@ -313,7 +338,7 @@ class Mutation:
                                         routeU.popCustomer(i+1)
                                         routeV.popCustomer(j)
                                         routeV.insertCustomer(u,j)
-                                        routeV.insertCustomer(auxRouteU.get_tour()[i+1],j)
+                                        routeV.insertCustomer(auxRouteU.get_tour()[i+1],j+1)
                                     elif type.upper() == "M6":
                                         routeU.popCustomer(i)
                                         routeU.insertCustomer(v,i)
@@ -331,6 +356,8 @@ class Mutation:
                                     #atualizar giantTour
                                     solution1.formGiantTour()
                                     solution1.calculateCost()
+                                    del auxRouteU
+                                    del auxRouteV
                                     return solution1
 
                             else:
@@ -339,16 +366,21 @@ class Mutation:
                                 # print(j)
                                 aux1 = [i]
                                 aux2 = [j]
-                                #print(routeU.get_tour()[aux1[0]])
-                                #print(aux2)
+                                # print(routeU.get_tour()[aux1[0]])
+                                # print(aux2)
                                 if type.upper() == "M5":
-                                    if i+1 < len(routeU.get_tour()):
+                                    if i+1 < len(routeU.get_tour()) and routeU.get_tour()[i+1] is not v:
                                         aux1 = [i,i+1]
                                         aux2 = [j]
                                     else:
                                         break
                                 if type.upper() == "M6":
-                                    if i+1 < len(routeU.get_tour()) and j+1 < len(routeU.get_tour()):
+                                    minor = lambda x,y:x if x<y else y
+                                    maximum = lambda x,y:x if x>y else y
+                                    max = maximum(i,j)
+                                    min = minor(i,j)
+                                    if max+1 < len(routeU.get_tour()) and min+1 < max:
+                                        # print("problema aqui")
                                         aux1 = [i,i+1]
                                         aux2 = [j,j+1]
                                     else:
