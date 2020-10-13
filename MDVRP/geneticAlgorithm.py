@@ -33,7 +33,7 @@ class GeneticAlgorithm:
 
                 aux1 = population[np.random.randint(0, len(population))]
                 aux2 = population[np.random.randint(0, len(population))]
-                
+
                 P1 = minor(aux1, aux2)
                 aux1 = population[np.random.randint(0, len(population))]
                 aux2 = population[np.random.randint(0, len(population))]
@@ -61,10 +61,10 @@ class GeneticAlgorithm:
 
                 cluster = SplitDepots.splitByDepot(child[0])
                 # print(cluster)
-                individual1 = split.splitLinearBounded(cluster)
+                individual1 = split.splitLinear(cluster)
                 cluster = SplitDepots.splitByDepot(child[1])
                 # print(cluster)
-                individual2 = split.splitLinearBounded(cluster)
+                individual2 = split.splitLinear(cluster)
 
                 individual = [individual1, individual2]
 
@@ -111,9 +111,9 @@ class GeneticAlgorithm:
             metric = pop.defineSurvivors(config.MI)
 
             # verifica se houve evolução na população
-            if round(metricPrev,2) == round(metric,2):
+            if round(metricPrev, 4) == round(metric, 4):
                 cont += 1
-            if cont>5:
+            if cont > 5:
                 print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
                 population = pop.get_population()
                 print(population)

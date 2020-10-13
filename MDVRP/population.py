@@ -9,12 +9,10 @@ import config
 import numpy as np
 
 
-
 class Population:
 
     def __init__(self):
         self._population = []  # lista de Solution ordenada em ordem crescente de custo
-
 
     '''
     Método define população inicial
@@ -28,8 +26,8 @@ class Population:
             break
         cluster = SplitDepots.splitByDepot(tour)
         # criação de rotas por depósitos, individual é um Solution
-        individual = split.splitLinearBounded(cluster)
-        
+        individual = split.splitLinear(cluster)
+
         rand = np.random.random()
         if rand < 0.05:
             individual = mt.mutation(individual)
@@ -37,9 +35,9 @@ class Population:
 
         # “cluster first and then route”
         cluster = SplitDepots.GilletJohnson()  # divisão por depósitos
-     
+
         # criação de rotas por depósitos, individual é um Solution
-        individual = split.splitLinearBounded(cluster)
+        individual = split.splitLinear(cluster)
         rand = np.random.random()
         if rand < 0.05:
             individual = mt.mutation(individual)
@@ -53,7 +51,7 @@ class Population:
             seed = int(5000 * np.random.random())
             cluster = SplitDepots.randomDistribution(seed)
             # criação de rotas por depósitos, individual é um Solution
-            individual = split.splitLinearBounded(cluster)
+            individual = split.splitLinear(cluster)
             rand = np.random.random()
             if rand < 0.05:
                 individual = mt.mutation(individual)
@@ -69,7 +67,6 @@ class Population:
         print(len(self._population))
 
         return self._population
-
 
     def verifyNodes(self, solution):
         tour = solution.get_giantTour()
@@ -97,8 +94,6 @@ class Population:
 
     def addIndividual(self, solution):
         self._population.append(solution)
-    
-
 
     '''
     Método remove o indivíduo de determinado índice da população
