@@ -5,6 +5,7 @@ from splitAlgorithms import SplitAlgorithms as split
 from solution import Solution
 from auxiliary_heuristics import NearestNeighbor
 from mutation import Mutation as mt
+from localSearch import LocalSearch as ls
 import config
 import numpy as np
 
@@ -29,8 +30,8 @@ class Population:
         individual = split.splitLinear(cluster)
 
         rand = np.random.random()
-        if rand < 0.05:
-            individual = mt.mutation(individual)
+        if rand < config.PROB_MUTATION_POP:
+            individual = ls.LS(individual)
         self.addIndividual(individual)
 
         # “cluster first and then route”
@@ -39,8 +40,8 @@ class Population:
         # criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinear(cluster)
         rand = np.random.random()
-        if rand < 0.05:
-            individual = mt.mutation(individual)
+        if rand < config.PROB_MUTATION_POP:
+            individual = ls.LS(individual)
         if individual is not None and self.is_different(individual):
             self.addIndividual(individual)
 
@@ -53,8 +54,8 @@ class Population:
             # criação de rotas por depósitos, individual é um Solution
             individual = split.splitLinear(cluster)
             rand = np.random.random()
-            if rand < 0.05:
-                individual = mt.mutation(individual)
+            if rand < config.PROB_MUTATION_POP:
+                individual = ls.LS(individual)
             if individual is not None and self.is_different(individual):
                 self.addIndividual(individual)
 
@@ -78,15 +79,12 @@ class Population:
 
     '''
     Método define as soluções sobreviventes (as de menor custo)
-    @return métrica da população
+    @return melhor custo da população
     '''
 
     def defineSurvivors(self, size):
         del self._population[size:len(self._population)]
-        control = 0
-        for x in self._population:
-            control += x.get_cost()/(config.MI + config.LAMBDA)
-        return control
+        return self.showBestSoution().get_cost()
 
     '''
     Método adiciona indivíduo a população
@@ -126,3 +124,6 @@ class Population:
             if solution.get_cost() == p.get_cost():
                 return False
         return True
+
+    def showBestSoution(self):
+        return self._population[0]
