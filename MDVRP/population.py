@@ -6,6 +6,7 @@ from solution import Solution
 from auxiliary_heuristics import NearestNeighbor
 from mutation import Mutation as mt
 from localSearch import LocalSearch as ls
+#from localSearchSimples import LocalSearch as ls
 import config
 import numpy as np
 
@@ -30,7 +31,7 @@ class Population:
         individual = split.splitLinear(cluster)
 
         rand = np.random.random()
-        if rand < config.PROB_MUTATION_POP:
+        if rand < config.PROB_LS_POP:
             individual = ls.LS(individual)
         self.addIndividual(individual)
 
@@ -40,7 +41,7 @@ class Population:
         # criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinear(cluster)
         rand = np.random.random()
-        if rand < config.PROB_MUTATION_POP:
+        if rand < config.PROB_LS_POP:
             individual = ls.LS(individual)
         if individual is not None and self.is_different(individual):
             self.addIndividual(individual)
@@ -54,7 +55,7 @@ class Population:
             # criação de rotas por depósitos, individual é um Solution
             individual = split.splitLinear(cluster)
             rand = np.random.random()
-            if rand < config.PROB_MUTATION_POP:
+            if rand < config.PROB_LS_POP:
                 individual = ls.LS(individual)
             if individual is not None and self.is_different(individual):
                 self.addIndividual(individual)
@@ -114,6 +115,9 @@ class Population:
 
     def get_population(self):
         return self._population
+
+    def changeIndividual(self,individual,index):
+        self._population[index] = individual
 
     '''
     Método verifica se há outro indivíduo com mesmo custo

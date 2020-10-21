@@ -1,5 +1,7 @@
 from distances import Distances as dist
 import copy
+import config
+import numpy as np
 
 '''
 Pesquisa local de Prins2004
@@ -10,40 +12,48 @@ class LocalSearch:
     '''
     Cada iteração varre todos os pares possíveis de nós distintos (u,v). Esses nós podem pertencer à mesma viagem ou a viagens diferentes
     e um deles pode ser o depósito. x e y são os sucessores de u e v em suas respectivas viagens.
+    parâmetro Where opcional, para indicar onde o método é chamado
     '''
-    def LS(solution):
+    def LS(solution,where=None):
+
         movimentation = [LocalSearch.M1, LocalSearch.M2, LocalSearch.M3, LocalSearch.M4,
                          LocalSearch.M5, LocalSearch.M6, LocalSearch.M7, LocalSearch.M8, LocalSearch.M9]
         bestSolution = None
         bestSolution = copy.deepcopy(solution)
 
-        # print("vai mudar")
-        # print(bestSolution.get_routes())
-        for i, m in enumerate(movimentation):
-            # print(m)
-            # print(solution)
-            # print(solution.get_routes())
-            solution1 = None
-            solution1 = m(bestSolution)
-            # tour = solution.get_giantTour()
-            # for i, c1 in enumerate(tour):
-            #     for j, c2 in enumerate(tour):
-            #         if i != j and c1 == c2:
-            #             print("Elementos iguais na LS")
-            #             exit(1)
-            # print(m)
-            # print(solution1)
-            # print(solution1.get_routes())
+        if where == 'ls' and np.random.random() < config.PROB_LS or where == None:
+            # print("vai mudar")
+            # print(bestSolution)
+            # print(bestSolution.get_routes())
+            for i, m in enumerate(movimentation):
+                # print(m)
+                # print(solution)
+                # print(solution.get_routes())
+                solution1 = None
+                solution1 = m(bestSolution)
+                # tour = solution.get_giantTour()
+                # for i, c1 in enumerate(tour):
+                #     for j, c2 in enumerate(tour):
+                #         if i != j and c1 == c2:
+                #             print("Elementos iguais na LS")
+                #             exit(1)
+                # print(m)
+                # print(solution1)
+                # print(solution1.get_routes())
 
-            if solution1.get_cost() < bestSolution.get_cost():
-                bestSolution = copy.deepcopy(solution1)
-            else:
-                # excluir rotas vazias
-                bestSolution.removeRoutesEmpty()
-                return bestSolution
+                if solution1.get_cost() < bestSolution.get_cost():
+                    bestSolution = copy.deepcopy(solution1)
+                    # print("achou melhor")
+                else:
+                    # excluir rotas vazias
+                    bestSolution.removeRoutesEmpty()
+                    # print("bestSolution")
+                    # print(bestSolution)
+                    return bestSolution
 
-        # excluir rotas vazias
-        bestSolution.removeRoutesEmpty()
+            # excluir rotas vazias
+            bestSolution.removeRoutesEmpty()
+            # print("não achou melhor")
         return bestSolution
 
     '''
@@ -96,7 +106,7 @@ class LocalSearch:
                                 solution1.formGiantTour()
                                 solution1.calculateCost()
                                 # print("rotas")
-                                del auxRouteU
+
                                 return solution1
 
                     # caso v seja o depósito
@@ -129,9 +139,8 @@ class LocalSearch:
                         # atualizar giantTour
                         solution1.formGiantTour()
                         solution1.calculateCost()
-                        del auxRouteU
                         return solution1
-        del auxRouteU
+
         return solution
 
     '''
@@ -221,7 +230,7 @@ class LocalSearch:
                                     solution1.calculateCost()
                                     return solution1
 
-                        # caso v seja o depósito
+                       # caso v seja o depósito
                         auxRouteU = copy.deepcopy(routeU)
                         if type.upper() == "M2":
                             # print(auxRouteU)

@@ -1,17 +1,19 @@
 from distances import Distances as dist
 import copy
 import numpy as np
+import config
 
 
 class Mutation:
 
     def mutation(giantTour):
-        movimentation = [Mutation.M1, Mutation.M2, Mutation.M3]
-        nMovimentation = np.random.randint(round(len(giantTour)/2))
         tour = giantTour
-        for i in range(nMovimentation):
-            m = np.random.randint(len(movimentation))
-            tour = movimentation[m](tour)
+        if np.random.random() < config.PROB_MUTATION:
+            movimentation = [Mutation.M1, Mutation.M2, Mutation.M3]
+            nMovimentation = np.random.randint(round(len(giantTour)/2))
+            for i in range(nMovimentation):
+                m = np.random.randint(len(movimentation))
+                tour = movimentation[m](tour)
 
         return tour
 

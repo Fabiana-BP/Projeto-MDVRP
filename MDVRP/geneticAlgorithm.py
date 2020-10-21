@@ -4,8 +4,10 @@ from splitDepots import SplitDepots
 from splitAlgorithms import SplitAlgorithms as split
 from mutation import Mutation
 from localSearch import LocalSearch as ls
+#from localSearchSimples import LocalSearch as ls
 import numpy as np
 import config
+import concurrent.futures
 
 
 class GeneticAlgorithm:
@@ -47,34 +49,43 @@ class GeneticAlgorithm:
                 # print(rand)
                 # print(P1)
                 # print(P2)
-                child = []
+                children = []
                 if rand > 0.5:
-                    child = cross.OBX(P1, P2)
+                    children = cross.OBX(P1, P2)
                 else:
-                    child = cross.PMX(P1, P2)
+                    children = cross.PMX(P1, P2)
                 # print("child: \n")
                 # print(child)
                 for a in range(2):
-                    for e1, c1 in enumerate(child[a]):
-                        for e2, c2 in enumerate(child[a]):
+                    for e1, c1 in enumerate(children[a]):
+                        for e2, c2 in enumerate(children[a]):
                             if e1 != e2 and c1 == c2:
                                 print("Elementos iguais")
                                 exit(1)
+
                 # Mutação
-                if np.random.random() < config.PROB_MUTATION:
-                    child[0] = Mutation.mutation(child[0])
-                if np.random.random() < config.PROB_MUTATION:
-                    child[1] = Mutation.mutation(child[1])
+
+                # duas threads
+                modChildren =  []
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                    future_to_child = {executor.submit(Mutation.mutation,child): child for child in children}
+                    for future in concurrent.futures.as_completed(future_to_child):
+                        child = future_to_child[future]
+                        try:
+                            indiv = future.result()
+                            modChildren.append(indiv)
+                        except Exception as exc:
+                            print('%s gerou uma exceção na busca local: %s' % (str(child), exc))
 
                 # split
-                cluster = SplitDepots.splitByDepot(child[0])
+                cluster = SplitDepots.splitByDepot(modChildren[0])
                 # print(cluster)
                 individual1 = split.splitLinear(cluster)
-                cluster = SplitDepots.splitByDepot(child[1])
+                cluster = SplitDepots.splitByDepot(modChildren[1])
                 # print(cluster)
                 individual2 = split.splitLinear(cluster)
 
-                individual = [individual1, individual2]
+                individuals = [individual1, individual2]
 
                 # print("individual: ")
                 # print(individual1)
@@ -87,21 +98,23 @@ class GeneticAlgorithm:
                 #                 exit(1)
 
                 # Busca Local
-                if np.random.random() < config.PROB_LS:
-                    individual1 = ls.LS(individual1)
-                if np.random.random() < config.PROB_LS:
-                    individual2 = ls.LS(individual2)
-                # print("individual: ")
-                # print("indivíduo: "+str(individual))
-                # print(individual.get_routes())
-                # pop.addIndividual(individual)
-                # pop.sortPopulation()
+                
+                # duas threads
+                modIndividuals =  []
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                    future_to_individual = {executor.submit(ls.LS,ind,'ls'): ind for ind in individuals}
+                    for future in concurrent.futures.as_completed(future_to_individual):
+                        ind = future_to_individual[future]
+                        try:
+                            indiv = future.result()
+                            modIndividuals.append(indiv)
+                        except Exception as exc:
+                            print('%s gerou uma exceção na busca local: %s' % (str(ind), exc))
 
-                individual = [individual1, individual2]
 
                 for a in range(2):
-                    for e1, c1 in enumerate(individual[a].get_giantTour()):
-                        for e2, c2 in enumerate(individual[a].get_giantTour()):
+                    for e1, c1 in enumerate(modIndividuals[a].get_giantTour()):
+                        for e2, c2 in enumerate(modIndividuals[a].get_giantTour()):
                             if e1 != e2 and c1 == c2:
                                 print("Elementos iguais na mutação")
                                 exit(1)
@@ -109,11 +122,18 @@ class GeneticAlgorithm:
                 # avalie a população
                 for a in range(2):
                     # indivíduo diferente do resto da população
-                    if pop.is_different(individual[a]):
-                        pop.addIndividual(individual[a])
+                    if pop.is_different(modIndividuals[a]):
+                        pop.addIndividual(modIndividuals[a])
 
                 pop.sortPopulation()
                 population = pop.get_population()
+                
+            # promoção
+            if np.random.random() < config.PROB_LS:
+                bestIndividual = ls.LS(population[0])
+                if pop.is_different(bestIndividual):
+                    pop.changeIndividual(bestIndividual,0)
+                    population = pop.get_population()
 
             # defina a população sobrevivente
             best = pop.defineSurvivors(config.MI)
@@ -127,6 +147,7 @@ class GeneticAlgorithm:
                 print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
 
             population = pop.get_population()
+            
 
             print("GERAÇÃO: {} - Custo: {}".format(i,
                                                    pop.showBestSoution().get_cost()))
