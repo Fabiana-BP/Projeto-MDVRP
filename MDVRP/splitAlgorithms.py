@@ -15,11 +15,12 @@ class SplitAlgorithms:
     algoritmo adaptado de https://w1.cirrelt.ca/~vidalt/en/VRP-resources.html
     Linear Split algorithm
     '''
-    def splitLinear(solution):
+    def splitLinear(solution,limitRoutes=False):
         solution1 = copy.deepcopy(solution)
         depotsList = dpts.get_depotsList()
         customers = solution1.get_giantTour()
         depots = solution1.get_depots()
+        penalty = 0.0
         for dpt in depotsList:
             listCst = []
             depot = depotsList[dpt]
@@ -108,17 +109,21 @@ class SplitAlgorithms:
                     trip = sorted(trip, key=lambda x: x[1])
                     # juntar rotas com menor demanda
                     aux = len(trip) - numberVehicles
+                    aux1 = aux
 
-                    while aux > 0:
-                        r0 = trip[0][0]
-                        r1 = trip[1][0]
-                        r0 = r0 + r1
-                        demand = trip[0][1] + trip[1][1]
-                        trip[0] = [r0, demand]
-                        del trip[1]
-                        # ordenada em ordem crescente de demanda
-                        trip = sorted(trip, key=lambda x: x[1])
-                        aux -= 1
+                    if limitRoutes:
+                        while aux > 0:
+                            r0 = trip[0][0]
+                            r1 = trip[1][0]
+                            r0 = r0 + r1
+                            demand = trip[0][1] + trip[1][1]
+                            trip[0] = [r0, demand]
+                            del trip[1]
+                            # ordenada em ordem crescente de demanda
+                            trip = sorted(trip, key=lambda x: x[1])
+                            aux -= 1
+                    else:
+                        penalty += 1000 * aux1
 
                 # adicionar rotas a solucao
                 for r in trip:
@@ -135,7 +140,7 @@ class SplitAlgorithms:
                     solution1.addRoutes(route)
 
         solution1.formGiantTour()
-        solution1.calculateCost()
+        solution1.calculateCost(penalty)
         # print(solution1.get_routes())
         # exit(1)
         return solution1

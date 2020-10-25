@@ -8,6 +8,7 @@ from localSearch import LocalSearch as ls
 import numpy as np
 import config
 import concurrent.futures
+import copy
 
 
 class GeneticAlgorithm:
@@ -51,9 +52,9 @@ class GeneticAlgorithm:
                 # print(P2)
                 children = []
                 if rand > 0.5:
-                    children = cross.OBX(P1, P2)
+                    children = cross.OBX(copy.deepcopy(P1), copy.deepcopy(P2))
                 else:
-                    children = cross.PMX(P1, P2)
+                    children = cross.PMX(copy.deepcopy(P1), copy.deepcopy(P2))
                 # print("child: \n")
                 # print(child)
                 for a in range(2):

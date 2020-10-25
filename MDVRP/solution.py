@@ -100,10 +100,14 @@ class Solution:
     Método calcula o custo total da solução
     '''
 
-    def calculateCost(self):
+    def calculateCost(self,extraPenalty = 0):
         self._cost = 0.0
         for r in self._routes:
             self._cost += r.get_totalCost()
+        #penalidade por excesso de rotas
+        if extraPenalty > 0:
+            self._cost += extraPenalty
+            self._infeasible = True
 
         #self._cost += self.diversity(10)
         # print(self._cost)

@@ -7,7 +7,7 @@ import config
 class Mutation:
 
     def mutation(giantTour):
-        tour = giantTour
+        tour = copy.deepcopy(giantTour)
         if np.random.random() < config.PROB_MUTATION:
             movimentation = [Mutation.M1, Mutation.M2, Mutation.M3]
             nMovimentation = np.random.randint(round(len(giantTour)/2))
