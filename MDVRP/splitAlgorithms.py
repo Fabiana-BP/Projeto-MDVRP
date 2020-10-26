@@ -15,7 +15,7 @@ class SplitAlgorithms:
     algoritmo adaptado de https://w1.cirrelt.ca/~vidalt/en/VRP-resources.html
     Linear Split algorithm
     '''
-    def splitLinear(solution,limitRoutes=False):
+    def splitLinear(solution,limitRoutes=True):
         solution1 = copy.deepcopy(solution)
         depotsList = dpts.get_depotsList()
         customers = solution1.get_giantTour()
