@@ -10,7 +10,7 @@ class Mutation:
         tour = copy.deepcopy(giantTour)
         if np.random.random() < config.PROB_MUTATION:
             movimentation = [Mutation.M1, Mutation.M2, Mutation.M3]
-            nMovimentation = np.random.randint(round(len(giantTour)/2))
+            nMovimentation = np.random.randint(len(movimentation *2))
             for i in range(nMovimentation):
                 m = np.random.randint(len(movimentation))
                 tour = movimentation[m](tour)

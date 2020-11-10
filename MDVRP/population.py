@@ -5,8 +5,8 @@ from splitAlgorithms import SplitAlgorithms as split
 from solution import Solution
 from auxiliary_heuristics import NearestNeighbor
 from mutation import Mutation as mt
-from localSearch import LocalSearch as ls
-#from localSearchSimples import LocalSearch as ls
+from localSearchFirst import LocalSearch as ls
+#from localSearch import LocalSearch as ls
 import config
 import numpy as np
 
@@ -21,6 +21,7 @@ class Population:
     '''
 
     def definePopulation(self, size):
+        LS = ls()
         # Heurística do vizinho mais próximo
         for cst in csts.get_customersList():
             tour = NearestNeighbor.nearestNeighbor(
@@ -29,42 +30,57 @@ class Population:
         cluster = SplitDepots.splitByDepot(tour)
         # criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinear(cluster)
-
+        # print(individual)
+        # print(individual.get_routes())
         rand = np.random.random()
         if rand < config.PROB_LS_POP:
-            individual = ls.LS(individual)
+            individual = LS.LS(individual)
         self.addIndividual(individual)
-
+        #print(individual)
+        # exit(1)
+        # print(individual.get_routes())
+        # exit(1)
         # “cluster first and then route”
         cluster = SplitDepots.GilletJohnson()  # divisão por depósitos
 
         # criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinear(cluster)
+        #print(individual)
+        # print(individual.get_routes())
         rand = np.random.random()
         if rand < config.PROB_LS_POP:
-            individual = ls.LS(individual)
+            individual = LS.LS(individual)
+        #print(individual)
+        # print(individual.get_routes())
+        
         if individual is not None and self.is_different(individual):
             self.addIndividual(individual)
-
+        
         # formação de rotas aleatórias
-        for i in range(2*size):
+        for i in range(2 * size):
             if len(self._population) >= size:
                 break
-            seed = int(5000 * np.random.random())
+            seed = i + int(500 * np.random.random())
             cluster = SplitDepots.randomDistribution(seed)
             # criação de rotas por depósitos, individual é um Solution
             individual = split.splitLinear(cluster)
+            #print(individual)
+            # print(individual.get_routes())
             rand = np.random.random()
             if rand < config.PROB_LS_POP:
-                individual = ls.LS(individual)
+                individual = LS.LS(individual)
             if individual is not None and self.is_different(individual):
                 self.addIndividual(individual)
-
+            #print(individual)
+            # print(individual.get_routes())
+            # exit(1)
+            
+        #exit(1)
         self.sortPopulation()
 
-        for i in self._population:
-            print(i)
-            self.verifyNodes(i)
+        # for i in self._population:
+        #     print(i)
+        #     self.verifyNodes(i)
 
         print(len(self._population))
 

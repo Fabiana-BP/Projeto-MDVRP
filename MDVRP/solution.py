@@ -39,6 +39,12 @@ class Solution:
         self._routes.append(route)
 
     '''
+    Método atualiza uma rota
+    '''
+    def setRoute(self, route, idRoute):
+        self._routes[idRoute] = route
+
+    '''
     Método remove uma rota
     '''
 

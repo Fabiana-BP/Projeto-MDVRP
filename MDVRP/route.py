@@ -122,6 +122,7 @@ class Route:
     @param lista de índices de clientes a serem substituídos
     @param lista de clientes substitutos
     @param rota
+    @return [costTotal,cost,load,duration]
     '''
     def costShiftNodes(self,listIdOld,listNew,route):
         #print(route)
@@ -134,6 +135,8 @@ class Route:
             controlCost = auxiliarRoute.costWithoutNode(listIdOld[0])
             auxiliarRoute.popCustomer(listIdOld[0])
             auxiliarRoute.set_cost(controlCost[1],controlCost[2],controlCost[3])
+            # print("auxiliarRoute")
+            # print(auxiliarRoute)
         #calcular custo com os novos individuos
         i = listIdOld[0]
         for new in listNew:
@@ -220,9 +223,6 @@ class Route:
         auxiliarRoute.startValues()
         auxiliarRoute.calculeCost()
         return [auxiliarRoute.get_totalCost(),auxiliarRoute]
-
-
-
 
 
     '''
