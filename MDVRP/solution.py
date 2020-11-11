@@ -9,6 +9,7 @@ class Solution:
     _routes = None
     _cost = float()
     _depots = None
+    _ranking = float()
 
     def __init__(self):
         self._giantTour = []  # lista de clientes, cada item um Customer
@@ -28,6 +29,12 @@ class Solution:
         self._depots = depots
         if infeasible != None:
             self._infeasible = infeasible
+
+    def set_ranking(self,ranking):
+        self._ranking = ranking
+    
+    def get_ranking(self):
+        return self._ranking
 
     '''
     Método adiciona uma rota em uma lista
@@ -142,11 +149,11 @@ class Solution:
         if self._infeasible:
             aux = "inviável"
 
-        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux
+        return "ranking: " + str(self._ranking)+ " \ngiantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux
 
     def __repr__(self):
         aux = ""
         if self._infeasible:
             aux = "inviável"
 
-        return "giantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux + "\n"
+        return "ranking: " + str(self._ranking)+" \ngiantTour: " + str(self._giantTour) + "\n" + "depósitos: " + str(self._depots) + "\ncusto: " + str(self._cost) + " - " + aux + "\n"

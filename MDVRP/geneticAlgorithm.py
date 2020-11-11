@@ -26,6 +26,9 @@ class GeneticAlgorithm:
         def minor(x, y): return x if x.get_cost() < y.get_cost() else y
         best = 0
         bestPrev = 0
+        controlPop = True
+        controlPopPrev = True
+        sumControl = 0
         cont = 0
         # avalie a população
 
@@ -34,19 +37,26 @@ class GeneticAlgorithm:
         while i < config.GEN and cont <= config.GEN_NO_EVOL:
             tAllIni = time.time()
             bestPrev = best
+            controlPopPrev = controlPop
             tLS = 0
 
             #sizePopulation = len(population)
             for j in range(round(config.LAMBDA/2)):
+                selProbalities = pop.get_selProbabilities() # probabilidade de seleção
+                # print("pop: "+str(len(population)))
+                # print("prob: "+str(len(selProbalities)))
                 # selecione os pais
+                aux = np.random.choice(population,2,replace=False,p=selProbalities)
 
-                aux1 = population[np.random.randint(len(population))]
-                aux2 = population[np.random.randint(len(population))]
+                # aux1 = population[np.random.randint(len(population))]
+                # aux2 = population[np.random.randint(len(population))]
 
-                P1 = minor(aux1, aux2)
-                aux1 = population[np.random.randint(len(population))]
-                aux2 = population[np.random.randint(len(population))]
-                P2 = minor(aux1, aux2)
+                P1 = minor(aux[0], aux[1])
+
+                aux = np.random.choice(population,2,replace=False,p=selProbalities)
+                # aux1 = population[np.random.randint(len(population))]
+                # aux2 = population[np.random.randint(len(population))]
+                P2 = minor(aux[0], aux[1])
 
                 # Crossover
 
@@ -138,8 +148,8 @@ class GeneticAlgorithm:
                     if pop.is_different(modIndividuals[a]):
                         pop.addIndividual(modIndividuals[a])
 
-            pop.sortPopulation()
-            population = pop.get_population()
+                pop.sortPopulation()
+                population = pop.get_population()
                 
             # promoção
 
@@ -154,7 +164,7 @@ class GeneticAlgorithm:
             modIndividuals =  []
             individuals = []            
             individuals = np.random.choice(population,p-1,replace=False)
-            individuals = np.append(individuals, population[0])
+            individuals = np.append(individuals, pop.showBestSoution())
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                     future_to_individual = {executor.submit(LSBest.LS,ind,where='ls'): ind for ind in individuals}
                     for future in concurrent.futures.as_completed(future_to_individual):
@@ -187,10 +197,21 @@ class GeneticAlgorithm:
             best = pop.defineSurvivors(config.MI)
 
             # verifica se houve evolução na população
+            # if not pop.verifyDiversity():
+            #     #print("Baixa diversidade")
+                
+            #     controlPop = False
+            # if not controlPop and controlPop == controlPopPrev:
+            #     sumControl += 1
+            # else:
+            #     sumControl = 0
             if bestPrev == best:
                 cont += 1
             else:
                 cont = 0
+            # if sumControl > config.CONT_METRIC:
+            #     population = pop.changePopulation()
+            #     sumControl = 0
             if cont > config.GEN_NO_EVOL:
                 print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
 
