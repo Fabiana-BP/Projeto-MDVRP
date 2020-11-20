@@ -8,10 +8,11 @@ from depots import Depots
 from distances import Distances
 from geneticAlgorithm import GeneticAlgorithm as GA
 import numpy as np
+import time
 
 
 def main():
-    np.random.seed(7890)
+    seed = 7890
     # recebendo instâncias
     r = ReadingDatas("dat/p01")
     r.readFile()
@@ -37,9 +38,13 @@ def main():
     # for cst in Customers.get_customersList():
     #     print(cst)
     #     print(Customers.get_customersList()[cst].get_neighborsDistances())
-
-    ga = GA()
-    ga.GA()
+    # exit(1)
+    for i in range(5):
+        ini = time.time()
+        ga = GA()
+        print(ga.GA(seed))
+        end = (time.time() - ini)/60
+        print("tempo: "+str(end))
 
 
 if __name__ == "__main__":

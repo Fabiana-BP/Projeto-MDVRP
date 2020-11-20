@@ -18,9 +18,9 @@ class GeneticAlgorithm:
     Método responsável pelo algoritmo genético
     '''
 
-    def GA(self):
-        # define população inicial
-        
+    def GA(self,seed):
+        np.random.seed(seed)
+        # define população inici
         pop = Population()
         population = pop.definePopulation(config.MI)
         def minor(x, y): return x if x.get_cost() < y.get_cost() else y
@@ -42,6 +42,7 @@ class GeneticAlgorithm:
 
             #sizePopulation = len(population)
             for j in range(round(config.LAMBDA/2)):
+                controlPop = True
                 selProbalities = pop.get_selProbabilities() # probabilidade de seleção
                 # print("pop: "+str(len(population)))
                 # print("prob: "+str(len(selProbalities)))
@@ -60,7 +61,7 @@ class GeneticAlgorithm:
 
                 # Crossover
 
-                rand = 0.5 #np.random.random()
+                rand = np.random.random()
                 # print(rand)
                 # print(P1)
                 # print(P2)
@@ -153,7 +154,7 @@ class GeneticAlgorithm:
                 
             # promoção
 
-            p = max(round(config.LAMBDA * 0.1),2) #10% da população
+            p = max(round(config.LAMBDA * 0.1),1) #10% da população
             ini = time.time()
             LSBest = ls()
             # if np.random.random() < config.PROB_LS:
@@ -162,8 +163,9 @@ class GeneticAlgorithm:
             #         pop.addIndividual(bestIndividual)
             #         population = pop.get_population()
             modIndividuals =  []
-            individuals = []            
-            individuals = np.random.choice(population,p-1,replace=False)
+            individuals = []
+            selProbalities = pop.get_selProbabilities() # probabilidade de seleção
+            individuals = np.random.choice(population,p,replace=False,p=selProbalities)
             individuals = np.append(individuals, pop.showBestSoution())
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                     future_to_individual = {executor.submit(LSBest.LS,ind,where='ls'): ind for ind in individuals}
@@ -173,9 +175,9 @@ class GeneticAlgorithm:
                             indiv = future.result()
                             modIndividuals.append(indiv)
                         except Exception as exc:
-                            print('%s gerou uma exceção na busca local: %s' % (str(ind), exc))
+                            print('%s gerou uma exceção na busca local - promoção: %s' % (str(ind), exc))
 
-            
+            #exit(1)
             # avalie a população
             for a in modIndividuals:
 
@@ -197,22 +199,31 @@ class GeneticAlgorithm:
             best = pop.defineSurvivors(config.MI)
 
             # verifica se houve evolução na população
+            # print("pop.verifyDiversity(): "+ str(pop.verifyDiversity()))
             # if not pop.verifyDiversity():
-            #     #print("Baixa diversidade")
-                
-            #     controlPop = False
-            # if not controlPop and controlPop == controlPopPrev:
-            #     sumControl += 1
+            #     # print("Baixa diversidade")
+            #     controlPop = False # perdeu diversidade
+            #     if controlPop == controlPopPrev:
+            #         # print("contando")
+            #         sumControl += 1
+            #         # print("controlPop "+str(controlPop))
+            #         # print("controlPopPrev "+str(controlPopPrev))
             # else:
+            #     # print("Entrou aqui")
             #     sumControl = 0
+                
+            
             if bestPrev == best:
                 cont += 1
             else:
                 cont = 0
             # if sumControl > config.CONT_METRIC:
+            #     # idum = i * seed
             #     population = pop.changePopulation()
             #     sumControl = 0
             if cont > config.GEN_NO_EVOL:
+                # population = pop.changePopulation()
+                # cont = 0
                 print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
 
             population = pop.get_population()
@@ -224,6 +235,7 @@ class GeneticAlgorithm:
             i += 1
 
         # liste os melhores indivíduos
-        print(population)
-        print(len(population))
+        # print(population)
+        # print(len(population))
+        return pop.showBestSoution()
         

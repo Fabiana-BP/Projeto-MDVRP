@@ -62,9 +62,9 @@ class SplitDepots:
     '''
     Método para distribuir clientes de forma aleatória aos depósitos.
     '''
-    def randomDistribution(idum):
+    def randomDistribution():
         #print('Entrou aqui')
-        np.random.seed(idum)
+        #np.random.seed(idum)
         SplitDepots._individual = Solution()
         customersList = copy.deepcopy(csts.get_customersList())  # dicionário
         # lista com as chaves dos clientes
@@ -216,8 +216,8 @@ class SplitDepots:
                     [unallocatedCustomers[cst], ratio, str(fstDepot[0])])
         # print("check")
         # print(unallocatedCustomers[cst])
-        # ordenar lista auxiliar em ordem crescente
-        pts = sorted(auxiliar, key=lambda x: x[1])
+        # ordenar lista auxiliar em ordem decrescente
+        pts = sorted(auxiliar, key=lambda x: x[1], reverse=True)
         # print("pts:")
         # print(pts)
         # print(SplitDepots._individual)

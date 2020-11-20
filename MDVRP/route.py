@@ -94,24 +94,20 @@ class Route:
         #custo do depósito ao primeiro cliente
         customer = self._tour[0]
         cost += dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._depot.get_x_coord(),self._depot.get_y_coord())
-        demand += customer.get_demand()
-        duration += customer.get_duration()
+        
         #custo do último cliente ao depósito
         customer = self._tour[length-1]
         cost += dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),self._depot.get_x_coord(),self._depot.get_y_coord())
-        demand += customer.get_demand()
-        duration += customer.get_duration()
+        
         #custo dos clientes intermediários
         for i in range(length):
-
+            customer = self._tour[i]
+            demand += customer.get_demand()
+            duration += customer.get_duration()
             if i+1 < length:
-                customer = self._tour[i]
                 nextCustomer = self._tour[i+1]
                 cost += dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),nextCustomer.get_x_coord(),nextCustomer.get_y_coord())
-            if i>0 and i<length-1:
-                demand += customer.get_demand()
-                duration += customer.get_duration()
-
+            
         self._totalDemand = demand
         self._totalDuration = duration
         self._cost = cost
@@ -420,6 +416,9 @@ class Route:
     '''
     def get_totalCost(self):
         return self._cost + self._penaltyDuration + self._penaltyDemand
+    
+    def get_costWithoutPenalty(self):
+        return self._cost
 
 
     def set_cost(self,cost,load,duration):
@@ -435,9 +434,18 @@ class Route:
 
     def get_depot(self):
         return self._depot
+    
+    def set_depot(self,depot):
+        self._depot = depot
 
     def is_infeasible(self):
         return self._infeasible
+    
+    def get_totalDemand(self):
+        return self._totalDemand
+    
+    def get_totalDuration(self):
+        return self._totalDuration
 
 
     '''

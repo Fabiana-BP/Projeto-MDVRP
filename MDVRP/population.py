@@ -24,10 +24,9 @@ class Population:
     def definePopulation(self, size):
         LS = ls()
         # Heurística do vizinho mais próximo
-        for cst in csts.get_customersList():
-            tour = NearestNeighbor.nearestNeighbor(
-                csts.get_customersList()[cst])
-            break
+        customers = list(csts.get_customersList().values())
+        cst0 = customers[np.random.randint(len(customers)-1)]
+        tour = NearestNeighbor.nearestNeighbor(cst0)
         cluster = SplitDepots.splitByDepot(tour)
         # criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinear(cluster)
@@ -41,6 +40,7 @@ class Population:
         # exit(1)
         # print(individual.get_routes())
         # exit(1)
+
         # “cluster first and then route”
         cluster = SplitDepots.GilletJohnson()  # divisão por depósitos
 
@@ -56,13 +56,28 @@ class Population:
 
         if individual is not None and self.is_different(individual):
             self.addIndividual(individual)
+        # for i in self._population:
+        #     print(i)
+        #     self.verifyNodes(i)
+        # exit(1)
 
         # formação de rotas aleatórias
+        self.formRandomPopulation(size)
+
+        self.sortPopulation()
+
+        
+        print(len(self._population))
+
+        return self._population
+
+    def formRandomPopulation(self,size):
+        LS = ls()
         for i in range(2 * size):
             if len(self._population) >= size:
                 break
-            seed = i + int(500 * np.random.random())
-            cluster = SplitDepots.randomDistribution(seed)
+            #seed = i + int(seed * np.random.random())
+            cluster = SplitDepots.randomDistribution()
             # criação de rotas por depósitos, individual é um Solution
             individual = split.splitLinear(cluster)
             # print(individual)
@@ -75,17 +90,6 @@ class Population:
             # print(individual)
             # print(individual.get_routes())
             # exit(1)
-
-        # exit(1)
-        self.sortPopulation()
-
-        # for i in self._population:
-        #     print(i)
-        #     self.verifyNodes(i)
-
-        print(len(self._population))
-
-        return self._population
 
     def verifyNodes(self, solution):
         tour = solution.get_giantTour()
@@ -106,14 +110,19 @@ class Population:
         return self.showBestSoution().get_cost()
     
     def changePopulation(self):
+        print('mudou população')
+        # print(self._population)
         lenght = len(self._population)
-        sizeSurvivors = round(lenght*0.3)
+        sizeSurvivors = max(1,round(lenght*0.1))
         del self._population[0:(len(self._population)-sizeSurvivors)]
         self.definePopulation(config.MI)
+        # self.sortPopulation()
+        # print('depois')
+        # print(self._population)
         return self._population
 
     '''
-    Método faz o rank linear da população
+    Método calcula o rank linear do indivíduo
     http://www.geatbx.com/docu/algindex-02.html#P244_16021
     '''
 
@@ -167,29 +176,30 @@ class Population:
     @return False caso métrica de diversidade for maior que config.METRIC
     '''
 
-    # def verifyDiversity(self):
-    #     lenght = len(self._population)
-    #     p = max(3,round(lenght * 0.15))
-    #     # escolher p indivíduos aleatórios
-    #     indexes = np.random.choice(lenght, p, replace=False)
-    #     metric = 0
-    #     for i in indexes:
-    #         m = 0
-    #         if i > 0 and i < lenght - 1:
-    #             m = abs(self._population[i].get_cost() - self._population[i-1].get_cost(
-    #             )) + abs(self._population[i].get_cost() - self._population[i+1].get_cost())
-    #         elif i == 0:
-    #             m = abs(self._population[i].get_cost() - self._population[lenght-1].get_cost(
-    #             )) + abs(self._population[i].get_cost() - self._population[i+1].get_cost())
-    #         else:
-    #             m = abs(self._population[i].get_cost() - self._population[i-1].get_cost(
-    #             )) + abs(self._population[i].get_cost() - self._population[0].get_cost())
-    #     metric += m
-    #     print(metric)
-    #     if metric <= config.METRIC:
-    #         return False
+    def verifyDiversity(self):
+        lenght = len(self._population)
+        p = max(3,round(lenght * 0.15))
+        # escolher p indivíduos aleatórios
+        indexes = np.random.choice(lenght, p, replace=False)
+        metric = 0
+        for i in indexes:
+            m = 0
+            if i > 0 and i < lenght - 1:
+                m = abs(self._population[i].get_cost() - self._population[i-1].get_cost(
+                )) + abs(self._population[i].get_cost() - self._population[i+1].get_cost())
+            elif i == 0:
+                m = abs(self._population[i].get_cost() - self._population[lenght-1].get_cost(
+                )) + abs(self._population[i].get_cost() - self._population[i+1].get_cost())
+            else:
+                m = abs(self._population[i].get_cost() - self._population[i-1].get_cost(
+                )) + abs(self._population[i].get_cost() - self._population[0].get_cost())
+        metric += m
+        print(metric)
+        # perdeu diversidade
+        if metric <= config.METRIC:
+            return False
         
-    #     return True
+        return True
 
     def get_population(self):
         return self._population
