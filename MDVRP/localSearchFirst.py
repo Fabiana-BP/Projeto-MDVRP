@@ -26,7 +26,7 @@ class LocalSearch:
         prob = config.PROB_LS
         # embaralhar os movimentos
         if nMovimentations == 'random':
-            n = max(2,round(0.5*lenght))
+            n = max(2,round(0.2*lenght))
             p = np.random.randint(1, n)
             movimentation = np.random.choice(movimentation, p, replace=False)
         else:
@@ -746,14 +746,14 @@ class LocalSearch:
                                 bestRoute.set_cost(newCost1, bestRoute.get_totalDemand(),
                                     bestRoute.get_totalDuration())
                                 cont = 1
-                        else:
-                            if (costWithoutRoute + newCost + 1000) < solution1.get_cost(): # ainda é melhor
-                                extraPenalty = 1000 #penalização por rota a mais
-                                bestRoute.set_depot(dpt)
-                                newCost1 = newCost - penalty
-                                bestRoute.set_cost(newCost1, bestRoute.get_totalDemand(),
-                                    bestRoute.get_totalDuration())
-                                cont = 1
+                        # else:
+                        #     if (costWithoutRoute + newCost + 1000) < solution1.get_cost(): # ainda é melhor
+                        #         extraPenalty = 1000 #penalização por rota a mais
+                        #         bestRoute.set_depot(dpt)
+                        #         newCost1 = newCost - penalty
+                        #         bestRoute.set_cost(newCost1, bestRoute.get_totalDemand(),
+                        #             bestRoute.get_totalDuration())
+                        #         cont = 1
             
                  
             if cont == 1:

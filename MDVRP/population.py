@@ -148,6 +148,9 @@ class Population:
             return individual
         else:
             return -1
+    
+    def removeIndividual(self,individual):
+        self._population.remove(individual)
 
     '''
     Método ordena a população em linear ranking

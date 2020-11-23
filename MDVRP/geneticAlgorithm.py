@@ -225,7 +225,7 @@ class GeneticAlgorithm:
                 # population = pop.changePopulation()
                 # cont = 0
                 print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
-
+            pop.sortPopulation()
             population = pop.get_population()
             tAll = (time.time() - tAllIni)/60
 
