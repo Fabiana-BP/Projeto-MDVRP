@@ -69,7 +69,8 @@ class Depot:
     def set_loadTotal(self,l):
         self._loadTotal = l
 
-
+    def __eq__(self,other_depot):
+        return self._id == other_depot.get_id()
 
     def __str__(self):
         return "id: " + str(self._id) + "  coord: " + str(self._x_coord) + ".." + str(self._y_coord) + "  loadTotal: " + str(self._loadTotal) + "  vehicles: "+ str(self._numberVehicles)

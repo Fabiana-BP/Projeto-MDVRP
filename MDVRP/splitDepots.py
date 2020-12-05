@@ -46,16 +46,18 @@ class SplitDepots:
             aux -= 1
         # associar o primeiro cliente da subrota ao depósito mais próximo
         depotsAvailable = list(copy.deepcopy(depots).keys())
+
         for s in split:
-            i = 0
-            depot = s[0].get_depotsDistances()[i]
-            while str(depot[0]) not in depotsAvailable:
-                i += 1
+            if s:
+                i = 0
                 depot = s[0].get_depotsDistances()[i]
-            for cst in s:
-                SplitDepots._individual.addGiantTour(
-                    cst, depots[str(depot[0])])
-            depotsAvailable.remove(str(depot[0]))
+                while str(depot[0]) not in depotsAvailable:
+                    i += 1
+                    depot = s[0].get_depotsDistances()[i]
+                for cst in s:
+                    SplitDepots._individual.addGiantTour(
+                        cst, depots[str(depot[0])])
+                depotsAvailable.remove(str(depot[0]))
 
         return SplitDepots._individual
 

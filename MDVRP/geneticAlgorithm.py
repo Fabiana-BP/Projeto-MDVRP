@@ -22,7 +22,7 @@ class GeneticAlgorithm:
         np.random.seed(seed)
         # define população inici
         pop = Population()
-        population = pop.definePopulation(config.MI)
+        population = pop.definePopulation(config.SIZE_POP)
         def minor(x, y): return x if x.get_cost() < y.get_cost() else y
         best = 0
         bestPrev = 0
@@ -30,18 +30,20 @@ class GeneticAlgorithm:
         controlPopPrev = True
         sumControl = 0
         cont = 0
+        timeControl = 0
         # avalie a população
 
         # critério de parada
         i = 0
-        while i < config.GEN and cont <= config.GEN_NO_EVOL:
+        while i < config.GEN and cont <= config.GEN_NO_EVOL and timeControl < config.TIME_TOTAL :
             tAllIni = time.time()
             bestPrev = best
             controlPopPrev = controlPop
             tLS = 0
 
             #sizePopulation = len(population)
-            for j in range(round(config.LAMBDA/2)):
+            descendant = []
+            for j in range(round(config.SIZE_DESC/2)):
                 controlPop = True
                 selProbalities = pop.get_selProbabilities() # probabilidade de seleção
                 # print("pop: "+str(len(population)))
@@ -146,16 +148,22 @@ class GeneticAlgorithm:
                 # avalie a população
                 for a in range(2):
                     # indivíduo diferente do resto da população
-                    if pop.is_different(modIndividuals[a]):
-                        pop.addIndividual(modIndividuals[a])
+                    if self.is_different(modIndividuals[a],descendant):
+                        #pop.addIndividual(modIndividuals[a])
+                        descendant.append(modIndividuals[a])
 
-                pop.sortPopulation()
-                population = pop.get_population()
-                
+                # pop.sortPopulation()
+                # population = pop.get_population()
+            
+            for desc in descendant:
+                if pop.is_different(desc):
+                    pop.addIndividual(desc)
+            
+            pop.sortPopulation()
+            population = pop.get_population()
             # promoção
 
-            p = max(round(config.LAMBDA * 0.1),1) #10% da população
-            ini = time.time()
+            p = max(round(config.SIZE_POP * 0.1),1) #10% da população
             LSBest = ls()
             # if np.random.random() < config.PROB_LS:
             #     bestIndividual = LSBest.LS(population[0])
@@ -196,7 +204,7 @@ class GeneticAlgorithm:
             pop.sortPopulation()
 
             # defina a população sobrevivente
-            best = pop.defineSurvivors(config.MI)
+            best = pop.defineSurvivors(config.SIZE_POP)
 
             # verifica se houve evolução na população
             # print("pop.verifyDiversity(): "+ str(pop.verifyDiversity()))
@@ -213,7 +221,7 @@ class GeneticAlgorithm:
             #     sumControl = 0
                 
             
-            if bestPrev == best:
+            if round(bestPrev,9) == round(best,9):
                 cont += 1
             else:
                 cont = 0
@@ -228,6 +236,7 @@ class GeneticAlgorithm:
             pop.sortPopulation()
             population = pop.get_population()
             tAll = (time.time() - tAllIni)/60
+            timeControl += tAll
 
             print("GERAÇÃO: {} - Custo: {} - Tempo LS: {} - Tempo LS Promotion: {} - Tempo Total: {}".format(i,
                                                    pop.showBestSoution().get_cost(),tLS,tTotalP,tAll))
@@ -239,3 +248,8 @@ class GeneticAlgorithm:
         # print(len(population))
         return pop.showBestSoution()
         
+    def is_different(self, solution,descendant):
+        for d in descendant:
+            if solution.get_cost() == d.get_cost():
+                return False
+        return True

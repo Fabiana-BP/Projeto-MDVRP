@@ -26,10 +26,11 @@ class LocalSearch:
         prob = config.PROB_LS
         # embaralhar os movimentos
         if nMovimentations == 'random':
-            n = max(2,round(0.2*lenght))
-            p = np.random.randint(1, n)
+            n = max(2,round(0.8*lenght))
+            p = np.random.randint(1, n+1)
             movimentation = np.random.choice(movimentation, p, replace=False)
         else:
+            # p = np.random.randint(1,lenght)
             prob = config.PROB_LS_BEST
             movimentation = np.random.choice(
                 movimentation, lenght, replace=False)
@@ -700,29 +701,32 @@ class LocalSearch:
         # print(route)
         if length>0:
             route1 = copy.deepcopy(route)
-            #rotação da rota para cada depósito
-            for dpt in depots.values():
-                for i in range(length):
-                    #rotacionar
-                    # print(route1)
-                    aux = route1.get_tour()[0]
-                    # print(aux)
-                    cost = route1.costWithoutNode(0)
-                    route1.removeCustomer(aux)
-                    route1.set_cost(cost[1], cost[2], cost[3])
-                    cost = route1.costWithNode(aux, length-1)
-                    route1.addCustomer(aux)
-                    route1.set_cost(cost[1], cost[2], cost[3])
-                    # print(route1)
-                    # print("-----")
-
-                    if bestRoute.get_totalCost() > route1.get_totalCost():
-                        # print("achou melhor")
-                        bestRoute = copy.deepcopy(route1)
-
-                        tour = bestRoute.get_tour()
+            #rotação da rota
+            for i in range(length):
+                #rotacionar
+                # print(route1)
+                aux = route1.get_tour()[0]
+                # print(aux)
+                cost = route1.costWithoutNode(0)
+                route1.removeCustomer(aux)
+                route1.set_cost(cost[1], cost[2], cost[3])
+                cost = route1.costWithNode(aux, length-1)
+                route1.addCustomer(aux)
+                route1.set_cost(cost[1], cost[2], cost[3])
+                # print(route1)
+                # print("-----")
+                # verificar se rota gerada é melhor (considerando mesmo depósito)
+                if bestRoute.get_totalCost() > route1.get_totalCost():
+                    extraPenalty = 0
+                    bestRoute = copy.deepcopy(route1)
+                    cont = 1
+                # verificar transferência da rota em outro depósito 
+                for dpt in depots.values():
+                    if str(dpt) != str(oldDepot):
+                        # verificar rota para o novo depósito
+                        tour = route1.get_tour()
                         # tirar o custo associado ao depósito
-                        cost1 = bestRoute.get_totalCost() - dist.euclidianDistance(tour[0].get_x_coord(),
+                        cost1 = route1.get_totalCost() - dist.euclidianDistance(tour[0].get_x_coord(),
                                 tour[0].get_y_coord(), oldDepot.get_x_coord(), oldDepot.get_y_coord()) - \
                                 dist.euclidianDistance(tour[length-1].get_x_coord(),
                                 tour[length-1].get_y_coord(), oldDepot.get_x_coord(), oldDepot.get_y_coord())
@@ -733,28 +737,31 @@ class LocalSearch:
                             dist.euclidianDistance(tour[length-1].get_x_coord(),
                             tour[length-1].get_y_coord(), dpt.get_x_coord(), dpt.get_y_coord())
                         
-                        # verifica número de veículos utilizados pelo depósito
-                        nVehicles = 0
-                        for r in solution1.get_routes():
-                            if r.get_depot() == dpt:
-                                nVehicles += 1
-                        if nVehicles < dpt.get_numberVehicles():
-                            if (costWithoutRoute + newCost) < solution1.get_cost(): # ainda é melhor
-                                extraPenalty = 0
-                                bestRoute.set_depot(dpt)
-                                newCost1 = newCost - penalty
-                                bestRoute.set_cost(newCost1, bestRoute.get_totalDemand(),
-                                    bestRoute.get_totalDuration())
-                                cont = 1
-                        # else:
-                        #     if (costWithoutRoute + newCost + 1000) < solution1.get_cost(): # ainda é melhor
-                        #         extraPenalty = 1000 #penalização por rota a mais
-                        #         bestRoute.set_depot(dpt)
-                        #         newCost1 = newCost - penalty
-                        #         bestRoute.set_cost(newCost1, bestRoute.get_totalDemand(),
-                        #             bestRoute.get_totalDuration())
-                        #         cont = 1
-            
+                        if bestRoute.get_totalCost() > newCost:
+                            # verifica número de veículos utilizados pelo depósito
+                            nVehicles = 0
+                            for r in solution1.get_routes():
+                                if r.get_depot() == dpt:
+                                    nVehicles += 1
+                            if nVehicles < dpt.get_numberVehicles():
+                                if (costWithoutRoute + newCost) < solution1.get_cost(): # é melhor
+                                    extraPenalty = 0
+                                    bestRoute = copy.deepcopy(route1)
+                                    bestRoute.set_depot(dpt)
+                                    newCost1 = newCost - penalty
+                                    bestRoute.set_cost(newCost1, bestRoute.get_totalDemand(),
+                                        bestRoute.get_totalDuration())
+
+                                    cont = 1
+                            # else:
+                            #     if (costWithoutRoute + newCost + 1000) < solution1.get_cost(): # ainda é melhor
+                            #         extraPenalty = 1000 #penalização por rota a mais
+                            #         bestRoute.set_depot(dpt)
+                            #         newCost1 = newCost - penalty
+                            #         bestRoute.set_cost(newCost1, bestRoute.get_totalDemand(),
+                            #             bestRoute.get_totalDuration())
+                            #         cont = 1
+                    
                  
             if cont == 1:
                 # print(penalty)

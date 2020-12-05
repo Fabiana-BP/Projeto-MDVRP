@@ -15,20 +15,11 @@ class Solution:
         self._giantTour = []  # lista de clientes, cada item um Customer
         self._routes = []  # lista de Route
 
-        self._idRoutes = []  # indicativo da rota
+        # self._idRoutes = []  # indicativo da rota
 
         self._cost = 0
         self._depots = []  # lista de depósitos, cada item o Depot de cada cliente
         self._infeasible = False
-
-    def set_solution(self, giantTour, routes, idRoutes, depots, cost, infeasible=None):
-        self._giantTour = giantTour
-        self._routes = routes
-        self._idRoutes = idRoutes
-        self._cost = cost
-        self._depots = depots
-        if infeasible != None:
-            self._infeasible = infeasible
 
     def set_ranking(self,ranking):
         self._ranking = ranking
@@ -66,13 +57,11 @@ class Solution:
     def formGiantTour(self):
         self._giantTour = []
         self._depots = []
-        ir = 0
         for r in self._routes:
             self._giantTour = self._giantTour + r.get_tour()
             for i in range(len(r.get_tour())):
                 self._depots.append(r.get_depot())
-                self._idRoutes.append(ir)
-            ir += 1
+            
 
     '''
     Método adiciona clientes no giantTour e o depósito correspondente
@@ -82,32 +71,6 @@ class Solution:
         self._giantTour.append(customer)
         self._depots.append(depot)
 
-    '''
-    Método calcula diversidade do indivíduo
-
-    def diversity(self,nClose,population,individual):
-        div = 0.0
-        i=0;
-        for t in self._giantTour:
-            cst = Customers.get_customersList()[str(t)]
-            depotCst = str(self._depots[i])
-            #recuperando os nClose vizinhos mais próximos
-            j = 0
-            dist = 0.0
-            for neighbor in cst.get_neighborsDistances():
-                if j < nClose:
-                    depotNbr = self._depots[self._giantTour.index(str(neighbor[0]))]
-                    if depotCst != str(depotNbr):
-                        dist += 1
-
-                j += 1
-            dist = dist / (2.0*nClose)
-            div += dist
-            i += 1
-
-        div = div/float(len(self._giantTour))
-        return div
-    '''
 
     '''
     Método calcula o custo total da solução

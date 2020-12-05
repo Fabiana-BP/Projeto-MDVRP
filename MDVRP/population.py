@@ -105,8 +105,17 @@ class Population:
     '''
 
     def defineSurvivors(self, size):
-        del self._population[0:(len(self._population)-size)]
+        # posicoes a deletar
+        # print(self._population)
+        fixIndividuals = max(2,round(0.1*config.SIZE_POP))
+        individuals = np.random.choice(self._population[0:(len(self._population)-fixIndividuals)],size-fixIndividuals,replace=False)
+        for i in range(1,(fixIndividuals+1)):
+            individuals = np.append(individuals,self._population[(len(self._population)-i)])
+        self._population = list(individuals)
+        # del self._population[0:(len(self._population)-size)]
         self.sortPopulation()
+        # print(self._population)
+        # exit(1)
         return self.showBestSoution().get_cost()
     
     def changePopulation(self):
@@ -115,7 +124,7 @@ class Population:
         lenght = len(self._population)
         sizeSurvivors = max(1,round(lenght*0.1))
         del self._population[0:(len(self._population)-sizeSurvivors)]
-        self.definePopulation(config.MI)
+        self.definePopulation(config.SIZE_POP)
         # self.sortPopulation()
         # print('depois')
         # print(self._population)

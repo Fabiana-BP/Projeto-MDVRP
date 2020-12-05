@@ -15,7 +15,6 @@ class Route:
     _penaltyDemand = float()
     _totalDemand = float()
     _totalDuration = float()
-    _routeVehicle = None
 
 
     def __init__(self,depot):

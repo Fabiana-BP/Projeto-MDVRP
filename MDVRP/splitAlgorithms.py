@@ -22,122 +22,125 @@ class SplitAlgorithms:
         depots = solution1.get_depots()
         penalty = 0.0
         for dpt in depotsList:
+            verifyDpt = False
             listCst = []
             depot = depotsList[dpt]
             for j in range(len(customers)):
-                if dpt == str(depots[j].get_id()):
+                if str(dpt) == str(depots[j].get_id()):
                     listCst.append(customers[j])
+                    verifyDpt = True
+            
+            if verifyDpt:
+                lenListCst = len(listCst)
+                sumDistance = []
+                sumLoad = []
+                potential = []
+                pred = []
 
-            lenListCst = len(listCst)
-            sumDistance = []
-            sumLoad = []
-            potential = []
-            pred = []
+                for x in range(lenListCst+1):
+                    sumDistance.append(0.0)
+                    sumLoad.append(0.0)
+                    potential.append(1.e30)
+                    pred.append(-1)
 
-            for x in range(lenListCst+1):
-                sumDistance.append(0.0)
-                sumLoad.append(0.0)
-                potential.append(1.e30)
-                pred.append(-1)
+                sumDistance[0] = 0  # distancia do depósito
+                # distância do depósito ao primeiro nó
+                sumDistance[1] = dist.euclidianDistance(listCst[0].get_x_coord(
+                ), listCst[0].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
 
-            sumDistance[0] = 0  # distancia do depósito
-            # distância do depósito ao primeiro nó
-            sumDistance[1] = dist.euclidianDistance(listCst[0].get_x_coord(
-            ), listCst[0].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+                sumLoad[0] = 0
+                sumLoad[1] = customers[0].get_demand()
+                potential[0] = 0
 
-            sumLoad[0] = 0
-            sumLoad[1] = customers[0].get_demand()
-            potential[0] = 0
+                # inicializar com o somatório distancia de i-1 a i e a demanda de i-1 a i
+                for i in range(2, lenListCst+1):
+                    sumDistance[i] = sumDistance[i-1] + dist.euclidianDistance(listCst[i-2].get_x_coord(
+                    ), listCst[i-2].get_y_coord(), listCst[i-1].get_x_coord(), listCst[i-1].get_y_coord())
+                    sumLoad[i] = sumLoad[i-1] + listCst[i-1].get_demand()
 
-            # inicializar com o somatório distancia de i-1 a i e a demanda de i-1 a i
-            for i in range(2, lenListCst+1):
-                sumDistance[i] = sumDistance[i-1] + dist.euclidianDistance(listCst[i-2].get_x_coord(
-                ), listCst[i-2].get_y_coord(), listCst[i-1].get_x_coord(), listCst[i-1].get_y_coord())
-                sumLoad[i] = sumLoad[i-1] + listCst[i-1].get_demand()
+                queue = [0]
 
-            queue = [0]
+                for i in range(1, lenListCst+1):
+                    # da frente é o melhor predecessor de 1
+                    potential[i] = SplitAlgorithms.propagate(
+                        queue[0], i, listCst, sumDistance, potential, depot)
+                    pred[i] = queue[0]
 
-            for i in range(1, lenListCst+1):
-                # da frente é o melhor predecessor de 1
-                potential[i] = SplitAlgorithms.propagate(
-                    queue[0], i, listCst, sumDistance, potential, depot)
-                pred[i] = queue[0]
+                    if i < lenListCst:
+                        # se i não é dominado pelo último da pilha
+                        if not SplitAlgorithms.dominates(queue[len(queue)-1], i, listCst, sumDistance, potential, sumLoad, depot):
+                            # então i será inserido, precisando remover quem ele domina
+                            while len(queue) > 0 and SplitAlgorithms.dominatesRight(queue[len(queue)-1], i, listCst, sumDistance, potential, depot):
+                                del queue[len(queue)-1]
+                            queue.append(i)
+                        # Verifica se a frente consegue chegar ao próximo nó, caso contrário ele desaparecerá.
+                        while len(queue) > 0 and (sumLoad[i+1] - sumLoad[queue[0]]) > (depot.get_loadVehicle() + 0.0001):
+                            del queue[0]
 
-                if i < lenListCst:
-                    # se i não é dominado pelo último da pilha
-                    if not SplitAlgorithms.dominates(queue[len(queue)-1], i, listCst, sumDistance, potential, sumLoad, depot):
-                        # então i será inserido, precisando remover quem ele domina
-                        while len(queue) > 0 and SplitAlgorithms.dominatesRight(queue[len(queue)-1], i, listCst, sumDistance, potential, depot):
-                            del queue[len(queue)-1]
-                        queue.append(i)
-                    # Verifica se a frente consegue chegar ao próximo nó, caso contrário ele desaparecerá.
-                    while len(queue) > 0 and (sumLoad[i+1] - sumLoad[queue[0]]) > (depot.get_loadVehicle() + 0.0001):
-                        del queue[0]
+                if potential[len(listCst)] > 1.e29:
+                    print("ERRO: nenhuma solução de divisão foi propagada até o último nó")
+                    exit(1)
+                else:
+                    # achando o número ótimo de rotas
+                    minCost = 1.e30
+                    nRoutes = 0
+                    cour = lenListCst
+                    while cour > 0:
+                        cour = pred[cour]
+                        nRoutes += 1
 
-            if potential[len(listCst)] > 1.e29:
-                print("ERRO: nenhuma solução de divisão foi propagada até o último nó")
-                exit(1)
-            else:
-                # achando o número ótimo de rotas
-                minCost = 1.e30
-                nRoutes = 0
-                cour = lenListCst
-                while cour > 0:
-                    cour = pred[cour]
-                    nRoutes += 1
+                    cour = len(listCst)
+                    # print(listCst)
+                    # print(pred)
+                    # print(cour)
+                    trip = []
+                    for i in range(nRoutes-1, -1, -1):
+                        t = []
 
-                cour = len(listCst)
-                # print(listCst)
-                # print(pred)
-                # print(cour)
-                trip = []
-                for i in range(nRoutes-1, -1, -1):
-                    t = []
+                        j = pred[cour]
+                        load = 0
+                        for k in range(j+1, cour+1):
+                            t.append(listCst[k-1])
+                            load += listCst[k-1].get_demand()
+                        cour = j
+                        trip.append([t, load])
 
-                    j = pred[cour]
-                    load = 0
-                    for k in range(j+1, cour+1):
-                        t.append(listCst[k-1])
-                        load += listCst[k-1].get_demand()
-                    cour = j
-                    trip.append([t, load])
+                    # se o número de rotas formadas for maior que o número de veículos, juntar as de menor demanda
+                    numberVehicles = depot.get_numberVehicles()
+                    if nRoutes > numberVehicles:
+                        # ordenada em ordem crescente de demanda
+                        trip = sorted(trip, key=lambda x: x[1])
+                        # juntar rotas com menor demanda
+                        aux = len(trip) - numberVehicles
+                        aux1 = aux
 
-                # se o número de rotas formadas for maior que o número de veículos, juntar as de menor demanda
-                numberVehicles = depot.get_numberVehicles()
-                if nRoutes > numberVehicles:
-                    # ordenada em ordem crescente de demanda
-                    trip = sorted(trip, key=lambda x: x[1])
-                    # juntar rotas com menor demanda
-                    aux = len(trip) - numberVehicles
-                    aux1 = aux
+                        if limitRoutes:
+                            while aux > 0:
+                                r0 = trip[0][0]
+                                r1 = trip[1][0]
+                                r0 = r0 + r1
+                                demand = trip[0][1] + trip[1][1]
+                                trip[0] = [r0, demand]
+                                del trip[1]
+                                # ordenada em ordem crescente de demanda
+                                trip = sorted(trip, key=lambda x: x[1])
+                                aux -= 1
+                        else:
+                            penalty += 1000 * aux1
 
-                    if limitRoutes:
-                        while aux > 0:
-                            r0 = trip[0][0]
-                            r1 = trip[1][0]
-                            r0 = r0 + r1
-                            demand = trip[0][1] + trip[1][1]
-                            trip[0] = [r0, demand]
-                            del trip[1]
-                            # ordenada em ordem crescente de demanda
-                            trip = sorted(trip, key=lambda x: x[1])
-                            aux -= 1
-                    else:
-                        penalty += 1000 * aux1
-
-                # adicionar rotas a solucao
-                for r in trip:
-                    route = Route(depot)
-                    # print("r")
-                    # print(r)
-                    for c in r[0]:
-                        # print("c")
-                        # print(c)
-                        route.addCustomer(c)
-                    # calcular custo da rota formada
-                    route.startValues()
-                    route.calculeCost()
-                    solution1.addRoutes(route)
+                    # adicionar rotas a solucao
+                    for r in trip:
+                        route = Route(depot)
+                        # print("r")
+                        # print(r)
+                        for c in r[0]:
+                            # print("c")
+                            # print(c)
+                            route.addCustomer(c)
+                        # calcular custo da rota formada
+                        route.startValues()
+                        route.calculeCost()
+                        solution1.addRoutes(route)
 
         solution1.formGiantTour()
         solution1.calculateCost(penalty)
