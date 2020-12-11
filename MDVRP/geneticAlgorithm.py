@@ -3,13 +3,14 @@ from crossover import Crossover as cross
 from splitDepots import SplitDepots
 from splitAlgorithms import SplitAlgorithms as split
 from mutation import Mutation
-#from localSearch import LocalSearch as ls
+from localSearchBest import LocalSearchBest as lsb
 from localSearchFirst import LocalSearch as ls
 import numpy as np
 import config
 import concurrent.futures
 import copy
 import time
+import traceback
 
 
 class GeneticAlgorithm:
@@ -132,6 +133,7 @@ class GeneticAlgorithm:
                             modIndividuals.append(indiv)
                         except Exception as exc:
                             print('%s gerou uma exceção na busca local: %s' % (str(ind), exc))
+                            traceback.print_exc()
                 # print(future_to_individual)
                 # print(individuals[0])
                 # print(modIndividuals)
@@ -164,7 +166,7 @@ class GeneticAlgorithm:
             # promoção
 
             p = max(round(config.SIZE_POP * 0.1),1) #10% da população
-            LSBest = ls()
+            LSBetter = ls()
             # if np.random.random() < config.PROB_LS:
             #     bestIndividual = LSBest.LS(population[0])
             #     if pop.is_different(bestIndividual):
@@ -176,7 +178,7 @@ class GeneticAlgorithm:
             individuals = np.random.choice(population,p,replace=False,p=selProbalities)
             individuals = np.append(individuals, pop.showBestSoution())
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-                    future_to_individual = {executor.submit(LSBest.LS,ind,where='ls'): ind for ind in individuals}
+                    future_to_individual = {executor.submit(LSBetter.LS,ind,where='ls'): ind for ind in individuals}
                     for future in concurrent.futures.as_completed(future_to_individual):
                         ind = future_to_individual[future]
                         try:
@@ -184,7 +186,7 @@ class GeneticAlgorithm:
                             modIndividuals.append(indiv)
                         except Exception as exc:
                             print('%s gerou uma exceção na busca local - promoção: %s' % (str(ind), exc))
-
+                            traceback.print_exc()
             #exit(1)
             # avalie a população
             for a in modIndividuals:
@@ -205,6 +207,46 @@ class GeneticAlgorithm:
 
             # defina a população sobrevivente
             best = pop.defineSurvivors(config.SIZE_POP)
+            population = pop.get_population()
+            
+            #busca local exaustiva - best improvemment
+            p = max(round(config.SIZE_POP * 0.05),1) #0.05% da população
+            LSBest = lsb()
+            # bestIndividual = LSBest.LS(pop.showBestSoution(),where='ls')
+            # if pop.is_different(bestIndividual):
+            #     pop.addIndividual(bestIndividual)
+            #     population = pop.get_population()
+
+            modIndividuals =  []
+            individuals = []
+            selProbalities = pop.get_selProbabilities() # probabilidade de seleção
+            individuals = np.random.choice(population,p,replace=False,p=selProbalities)
+            individuals = np.append(individuals, pop.showBestSoution())
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+                    future_to_individual = {executor.submit(LSBest.LS,ind,where='ls'): ind for ind in individuals}
+                    for future in concurrent.futures.as_completed(future_to_individual):
+                        ind = future_to_individual[future]
+                        try:
+                            indiv = future.result()
+                            modIndividuals.append(indiv)
+                        except Exception as exc:
+                            print('%s gerou uma exceção na busca local - promoção: %s' % (str(ind), exc))
+                            traceback.print_exc()
+
+        
+            # avalie a população
+            for a in modIndividuals:
+
+                for e1, c1 in enumerate(a.get_giantTour()):
+                        for e2, c2 in enumerate(a.get_giantTour()):
+                            if e1 != e2 and c1 == c2:
+                                print("Elementos iguais na busca local - promoção")
+                                exit(1)
+
+                # indivíduo diferente do resto da população
+                if pop.is_different(a):
+                    pop.addIndividual(a)
+
 
             # verifica se houve evolução na população
             # print("pop.verifyDiversity(): "+ str(pop.verifyDiversity()))

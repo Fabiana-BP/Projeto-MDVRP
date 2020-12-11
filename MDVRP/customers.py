@@ -17,7 +17,7 @@ class Customers:
             cst = Customer()
             cst.set_id(int(dataCustomer[0]))
             cst.set_xy_coord(float(dataCustomer[1]),float(dataCustomer[2]))
-            cst.set_duration(float(dataCustomer[3]))
+            cst.set_service(float(dataCustomer[3]))
             cst.set_demand(float(dataCustomer[4]))
             cst.set_beginTimeWindow(float(dataCustomer[(nColumn-2)]))
             cst.set_endTimeWindow(float(dataCustomer[(nColumn-1)]))

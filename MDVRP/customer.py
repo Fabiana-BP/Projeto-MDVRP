@@ -4,7 +4,7 @@ class Customer:
         self._id = ""
         self._x_coord = 0
         self._y_coord = 0
-        self._duration = 0
+        self._service = 0
         self._demand = 0
         self._beginTimeWindow = 0
         self._endTimeWindow = 0
@@ -28,11 +28,11 @@ class Customer:
         self._x_coord = x
         self._y_coord = y
 
-    def get_duration(self):
-        return self._duration
+    def get_service(self):
+        return self._service
 
-    def set_duration(self,d):
-        self._duration = d
+    def set_service(self,s):
+        self._service = s
 
     def get_demand(self):
         return self._demand

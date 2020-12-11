@@ -16,7 +16,7 @@ import config
 
 def main():
     seed = 7890
-    nInstance = 15  # número da instância - 1
+    nInstance = 0  # número da instância - 1
     instance = config.INSTANCES[nInstance]
     # recebendo instâncias
     r = ReadingDatas(config.DIRECTORY_DATAS+instance)

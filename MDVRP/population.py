@@ -65,6 +65,8 @@ class Population:
         self.formRandomPopulation(size)
 
         self.sortPopulation()
+        # for i in self._population:
+        #     print(i)
 
         
         print(len(self._population))

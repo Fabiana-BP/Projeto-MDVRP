@@ -400,22 +400,19 @@ class SplitAlgorithms:
             load = 0.0
             cost = 0.0
             j = i
-            duration = 0
-            while (j <= n) and (load <= vehicleCapacity) and (duration <= durationRoute):
+            while (j <= n) and (load <= vehicleCapacity) and (cost <= durationRoute):
                 customer = path[j-1]
                 load += customer.get_demand()
                 if i == j:
                     # custo de ida e volta
-                    duration += customer.get_duration()
                     cost = 2 * dist.euclidianDistance(customer.get_x_coord(), customer.get_y_coord(
-                    ), depot.get_x_coord(), depot.get_y_coord()) + customer.get_duration()
+                    ), depot.get_x_coord(), depot.get_y_coord()) + customer.get_service()
                 else:
-                    duration += customer.get_duration()
                     previewCustomer = path[j-2]
                     cost = cost - dist.euclidianDistance(previewCustomer.get_x_coord(), previewCustomer.get_y_coord(), depot.get_x_coord(), depot.get_y_coord()) + dist.euclidianDistance(previewCustomer.get_x_coord(
-                    ), previewCustomer.get_y_coord(), customer.get_x_coord(), customer.get_y_coord()) + customer.get_duration() + dist.euclidianDistance(customer.get_x_coord(), customer.get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+                    ), previewCustomer.get_y_coord(), customer.get_x_coord(), customer.get_y_coord()) + customer.get_service() + dist.euclidianDistance(customer.get_x_coord(), customer.get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
 
-                if (load <= vehicleCapacity) and (duration <= durationRoute):
+                if (load <= vehicleCapacity) and (cost <= durationRoute):
                     if (v[i-1] + cost) < v[j]:
                         v[j] = v[i-1] + cost
                         predecessor[j] = i-1

@@ -27,20 +27,18 @@ class SplitDepots:
         # dividir em n grupos de clientes
         aux = nDepots
         for n in depots.values():
-            control = [0, 0]  # carregamento, duração
+            load = 0  # carregamento
             tour = []
             # se existir cliente não alocado
-            while (control[0] < n.get_loadTotal() and control[1] < n.get_durationTotal()) or aux == 1:
+            while load < n.get_loadTotal() or aux == 1:
                 if len(customers) == 0 or (aux > 1 and len(tour) >= maxCustomers):
                     break
-                control[0] = control[0] + customers[0].get_demand()
-                control[1] = control[1] + customers[0].get_duration()
-                if (control[0] <= n.get_loadTotal() and control[1] <= n.get_durationTotal()) or aux == 1:
+                load = load + customers[0].get_demand()
+                if load <= n.get_loadTotal() or aux == 1:
                     tour.append(customers[0])
                     del customers[0]  # atualizar lista
                 else:
-                    control[0] = control[0] - customers[0].get_demand()
-                    control[1] = control[1] - customers[0].get_duration()
+                    load = load - customers[0].get_demand()
                     break
             split.append(tour)
             aux -= 1
@@ -79,11 +77,11 @@ class SplitDepots:
         nCustomers = len(keysCst)
         solution = {}
 
-        # (depósito, [total de demanda, duração por depósito, número de clientes alocados]
+        # (depósito, [total de demanda, número de clientes alocados]
         control = {}
 
         for depot in depots:
-            control[depot] = [0, 0, 0]
+            control[depot] = [0, 0]
         while nCustomers > 0:  # enquanto tiver cliente não alocado
             # cliente aleatório
             idCst = np.random.randint(0, len(keysCst))
@@ -93,7 +91,7 @@ class SplitDepots:
             dpt = customer.get_depotsDistances()[i]
             cont = len(customer.get_depotsDistances())
             aux = 0
-            while (control[str(dpt[0])][0] >= depots[str(dpt[0])].get_loadTotal() + 0.0001 or control[str(dpt[0])][1] >= depots[str(dpt[0])].get_durationTotal() or (cont > 1 and control[str(dpt[0])][2] > maxCustomers)) and cont > 0:
+            while (control[str(dpt[0])][0] >= depots[str(dpt[0])].get_loadTotal() + 0.0001 or (cont > 1 and control[str(dpt[0])][1] > maxCustomers)) and cont > 0:
                 if cont == 1:
                     aux = 1  # indica que todos os depósitos anteriores estão lotados
                 i += 1
@@ -103,9 +101,7 @@ class SplitDepots:
             depot = depots[str(dpt[0])]
             control[str(dpt[0])][0] = control[str(
                 dpt[0])][0] + customer.get_demand()
-            control[str(dpt[0])][1] = control[str(dpt[0])][1] + \
-                customer.get_duration()
-            control[str(dpt[0])][2] = control[str(dpt[0])][2] + 1
+            control[str(dpt[0])][1] = control[str(dpt[0])][1] + 1
 
             # adicionar cliente ao depósito
             SplitDepots._individual.addGiantTour(customer, depot)
@@ -138,11 +134,9 @@ class SplitDepots:
 
                 control[str(dpt[0])][0] = control[str(
                     dpt[0])][0] + close.get_demand()
-                control[str(dpt[0])][1] = control[str(
-                    dpt[0])][1] + close.get_duration()
-                control[str(dpt[0])][2] = control[str(dpt[0])][2] + 1
+                control[str(dpt[0])][1] = control[str(dpt[0])][1] + 1
 
-                if (control[str(dpt[0])][0] <= depot.get_loadTotal() + 0.0001 and control[str(dpt[0])][1] <= (depot.get_durationTotal()) and control[str(dpt[0])][2] <= maxCustomers) or aux == 1:
+                if (control[str(dpt[0])][0] <= depot.get_loadTotal() + 0.0001 and control[str(dpt[0])][1] <= maxCustomers) or aux == 1:
                     # adicionar vizinho mais próximo a solução
                     SplitDepots._individual.addGiantTour(close, depot)
                     del keysCst[id]  # atualizar lista
@@ -150,9 +144,7 @@ class SplitDepots:
                 else:
                     control[str(dpt[0])][0] = control[str(
                         dpt[0])][0] - close.get_demand()
-                    control[str(dpt[0])][1] = control[str(
-                        dpt[0])][1] - close.get_duration()
-                    control[str(dpt[0])][2] = control[str(dpt[0])][2] - 1
+                    control[str(dpt[0])][1] = control[str(dpt[0])][1] - 1
 
         # print(self._individual.get_giantTour())
         # print(SplitDepots._individual.get_depots())

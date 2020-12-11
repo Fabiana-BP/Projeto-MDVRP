@@ -2,6 +2,7 @@
 Arquivo responsável pela leitura das instâncias
 @author Fabiana Barreto Pereira
 '''
+import math
 class ReadingDatas:
 
     def __init__(self,name_file):
@@ -30,7 +31,7 @@ class ReadingDatas:
             self._load = float(line[1])
             self._durationRoute = float(line[0])
             if self._durationRoute == 0.0:
-                self._durationRoute = 9999.0
+                self._durationRoute = math.inf
 
         #dados clientes
         for i in range(self._numberCustomers):

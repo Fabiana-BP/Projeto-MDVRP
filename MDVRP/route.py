@@ -14,7 +14,7 @@ class Route:
     _penaltyDuration = float()
     _penaltyDemand = float()
     _totalDemand = float()
-    _totalDuration = float()
+    _totalService = float()
 
 
     def __init__(self,depot):
@@ -31,7 +31,7 @@ class Route:
         self._penaltyDuration = 0.0
         self._penaltyDemand = 0.0
         self._totalDemand = 0.0
-        self._totalDuration = 0.0
+        self._totalService = 0.0
         self._infeasible = False
 
 
@@ -87,7 +87,7 @@ class Route:
     def calculeCost(self):
         cost = 0.0
         demand = 0.0
-        duration = 0.0
+        service = 0.0
         length = len(self._tour)
 
         #custo do depósito ao primeiro cliente
@@ -102,13 +102,13 @@ class Route:
         for i in range(length):
             customer = self._tour[i]
             demand += customer.get_demand()
-            duration += customer.get_duration()
+            service += customer.get_service()
             if i+1 < length:
                 nextCustomer = self._tour[i+1]
                 cost += dist.euclidianDistance(customer.get_x_coord(),customer.get_y_coord(),nextCustomer.get_x_coord(),nextCustomer.get_y_coord())
             
         self._totalDemand = demand
-        self._totalDuration = duration
+        self._totalService = service
         self._cost = cost
         self.updatePenalty()
 
@@ -117,13 +117,13 @@ class Route:
     @param lista de índices de clientes a serem substituídos
     @param lista de clientes substitutos
     @param rota
-    @return [costTotal,cost,load,duration]
+    @return [costTotal,cost,load,service]
     '''
     def costShiftNodes(self,listIdOld,listNew,route):
         #print(route)
         #print(listIdOld)
         #print(listNew)
-        controlCost = [] #[costTotal,cost,load,duration]
+        controlCost = [] #[costTotal,cost,load,service]
         auxiliarRoute = copy.deepcopy(route)
         #atualizar custo sem os individuos
         for i in range(len(listIdOld)):
@@ -223,18 +223,18 @@ class Route:
     '''
     Método calcula custo ao adicionar um nó a mais na rota
     @param customer, índice de inserção
-    @return lista [custo com penalização, custo sem penalização, carregamento total, duração total]
+    @return lista [custo com penalização, custo sem penalização, carregamento total, serviço total]
     '''
     def costWithNode(self,customer,index):
         cost = 0.0
         load = self._totalDemand + customer.get_demand()
-        duration = self._totalDuration + customer.get_duration()
+        service = self._totalService + customer.get_service()
         length = len(self._tour)
 
         if length == 0: #lista vazia:
             cost = 2 * dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer.get_x_coord(),customer.get_y_coord())
             load = customer.get_demand()
-            duration = customer.get_duration()
+            service = customer.get_service()
         #verificar se ele ligará ao depósito
         elif index == 0:
             cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord()) + \
@@ -255,10 +255,10 @@ class Route:
         costTotal = cost
         if load > self._depot.get_loadVehicle():
             costTotal += 1000 * (load - self._depot.get_loadVehicle())
-        if duration > self._depot.get_durationRoute():
-            costTotal += 1000 * (duration - self._depot.get_durationRoute())
+        if cost + service > self._depot.get_durationRoute():
+            costTotal += 1000 * abs(service - self._depot.get_durationRoute())
 
-        return [costTotal,cost,load,duration]
+        return [costTotal,cost,load,service]
 
     '''
     Método calcula custo ao adicionar dois nós consecutivos a mais na rota
@@ -268,7 +268,7 @@ class Route:
     def costWith2Nodes(self,customer1,customer2,index):
         cost = 0.0
         load = self._totalDemand + customer1.get_demand() + customer2.get_demand()
-        duration = self._totalDuration + customer1.get_duration() + customer2.get_duration()
+        service = self._totalService + customer1.get_service() + customer2.get_service()
         length = len(self._tour)
 
         #verificar se ele ligará ao depósito
@@ -277,7 +277,7 @@ class Route:
             dist.euclidianDistance(customer1.get_x_coord(),customer1.get_y_coord(),customer2.get_x_coord(),customer2.get_y_coord()) + \
             dist.euclidianDistance(customer2.get_x_coord(),customer2.get_y_coord(),self._depot.get_x_coord(),self._depot.get_y_coord())
             load = customer1.get_demand() + customer2.get_demand()
-            duration = customer1.get_duration() + customer2.get_duration()
+            service = customer1.get_service() + customer2.get_service()
         elif index == 0:
             cost = self._cost - dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),self._tour[0].get_x_coord(),self._tour[0].get_y_coord()) + \
             dist.euclidianDistance(self._depot.get_x_coord(),self._depot.get_y_coord(),customer1.get_x_coord(),customer1.get_y_coord()) + \
@@ -299,10 +299,10 @@ class Route:
         costTotal = cost
         if load > self._depot.get_loadVehicle():
             costTotal += 1000 * (load - self._depot.get_loadVehicle())
-        if duration > self._depot.get_durationRoute():
-            costTotal += 1000 * (duration - self._depot.get_durationRoute())
+        if cost + service > self._depot.get_durationRoute():
+            costTotal += 1000 * abs(service - self._depot.get_durationRoute())
 
-        return [costTotal,cost,load,duration]
+        return [costTotal,cost,load,service]
 
 
     '''
@@ -313,7 +313,7 @@ class Route:
     def costWithoutNode(self,indexCst):
         cost = 0.0
         load = self._totalDemand - self._tour[indexCst].get_demand()
-        duration = self._totalDuration - self._tour[indexCst].get_duration()
+        service = self._totalService - self._tour[indexCst].get_service()
         length = len(self._tour)
 
         if length == 1:#só tem esse cliente
@@ -338,10 +338,10 @@ class Route:
         costTotal = cost
         if load > self._depot.get_loadVehicle():
             costTotal += 1000 * (load - self._depot.get_loadVehicle())
-        if duration > self._depot.get_durationRoute():
-            costTotal += 1000 * (duration - self._depot.get_durationRoute())
+        if cost + service > self._depot.get_durationRoute():
+            costTotal += 1000 * abs(service - self._depot.get_durationRoute())
 
-        return [costTotal,cost,load,duration]
+        return [costTotal,cost,load,service]
 
 
     '''
@@ -353,7 +353,7 @@ class Route:
     def costWithout2Nodes(self,indexFst):
         cost = 0.0
         load = self._totalDemand - self._tour[indexFst].get_demand() - self._tour[indexFst+1].get_demand()
-        duration = self._totalDuration - self._tour[indexFst].get_duration() - self._tour[indexFst+1].get_duration()
+        service = self._totalService - self._tour[indexFst].get_service() - self._tour[indexFst+1].get_service()
         length = len(self._tour)
 
         if length == 2:#só tem esses 2 clientes
@@ -381,10 +381,10 @@ class Route:
         costTotal = cost
         if load > self._depot.get_loadVehicle():
             costTotal += 1000 * (load - self._depot.get_loadVehicle())
-        if duration > self._depot.get_durationRoute():
-            costTotal += 1000 * (duration - self._depot.get_durationRoute())
+        if cost + service > self._depot.get_durationRoute():
+            costTotal += 1000 * (abs(service - self._depot.get_durationRoute()))
 
-        return [costTotal,cost,load,duration]
+        return [costTotal,cost,load,service]
 
 
     '''
@@ -400,11 +400,11 @@ class Route:
         else:
             self._penaltyDemand = 0.0
 
-
+        cost = self._cost + self._totalService
         duration = float(self._depot.get_durationRoute())
         #print(duration)
-        if self._totalDuration > duration:
-            self._penaltyDuration = 1000 * (self._totalDuration - duration)
+        if cost > duration:
+            self._penaltyDuration = 1000 * abs(self._totalService - duration)
             self._infeasible = True
         else:
             self._penaltyDuration = 0.0
@@ -420,10 +420,10 @@ class Route:
         return self._cost
 
 
-    def set_cost(self,cost,load,duration):
+    def set_cost(self,cost,load,service):
         self._cost = cost
         self._totalDemand = load
-        self._totalDuration = duration
+        self._totalService = service
         self.updatePenalty()
 
 
@@ -443,20 +443,20 @@ class Route:
     def get_totalDemand(self):
         return self._totalDemand
     
-    def get_totalDuration(self):
-        return self._totalDuration
+    def get_totalService(self):
+        return self._totalService
 
 
     '''
     Método imprime a rota com o depósito e o custo associado
     '''
     def printRoute(self):
-        print("depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - duração total: {:10.4f} - rota: {}".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalDuration,str(self._tour)))
+        print("depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - tempo de serviço: {:10.4f} - rota: {}".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalService,str(self._tour)))
 
 
     def __str__(self):
-        return "depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - duração total: {:10.4f} - rota: {}".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalDuration,str(self._tour))
+        return "depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - tempo de serviço: {:10.4f} - rota: {}".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalService,str(self._tour))
 
     def __repr__(self):
-        return "depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - duração total: {:10.4f} - rota: {}\n".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalDuration,str(self._tour))
+        return "depósito: {} - custo: {:10.4f} - demanda: {:10.4f} - tempo de serviço: {:10.4f} - rota: {}\n".format(self._depot.get_id(),self.get_totalCost(),self._totalDemand,self._totalService,str(self._tour))
         #"depósito: {} - rota: {} - custo com penalização: {:10.4f}\n".format(self._depot.get_id(),str(self._tour),self.get_totalCost())
