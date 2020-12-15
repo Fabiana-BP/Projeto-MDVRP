@@ -118,7 +118,7 @@ class Population:
         self.sortPopulation()
         # print(self._population)
         # exit(1)
-        return self.showBestSoution().get_cost()
+        return self.showBestSolution().get_cost()
     
     def changePopulation(self):
         print('mudou população')
@@ -235,5 +235,8 @@ class Population:
                 return False
         return True
 
-    def showBestSoution(self):
+    def showBestSolution(self):
         return self._population[len(self._population)-1]
+
+    def showSecondBestSolution(self):
+        return self._population[len(self._population)-2]

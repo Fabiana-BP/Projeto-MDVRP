@@ -11,17 +11,21 @@ import concurrent.futures
 import copy
 import time
 import traceback
+import threading as th
 
+mutex = th.Semaphore(1)
+newIndividuals = [] # indivíduos obtidos na busca local best improvement
 
 class GeneticAlgorithm:
-
     '''
     Método responsável pelo algoritmo genético
     '''
 
     def GA(self,seed):
+        global mutex
+        global newIndividuals
         np.random.seed(seed)
-        # define população inici
+        # define população inicial
         pop = Population()
         population = pop.definePopulation(config.SIZE_POP)
         def minor(x, y): return x if x.get_cost() < y.get_cost() else y
@@ -156,10 +160,26 @@ class GeneticAlgorithm:
 
                 # pop.sortPopulation()
                 # population = pop.get_population()
-            
+            # inserir descendentes à população
             for desc in descendant:
                 if pop.is_different(desc):
                     pop.addIndividual(desc)
+            
+            # inserir indivíduos da lista newIndividuals (se existir) à população
+
+            #início seção crítica
+            mutex.acquire()
+            # print("verificar lista")
+            # print(newIndividuals)
+            if newIndividuals:
+                # print("novo: "+ str(len(newIndividuals)))
+                for ni in newIndividuals:
+                    if pop.is_different(ni):
+                        # print("achou assíncrona")
+                        pop.addIndividual(ni)
+                newIndividuals = []
+            mutex.release()
+            #fim seção crítica
             
             pop.sortPopulation()
             population = pop.get_population()
@@ -167,16 +187,12 @@ class GeneticAlgorithm:
 
             p = max(round(config.SIZE_POP * 0.1),1) #10% da população
             LSBetter = ls()
-            # if np.random.random() < config.PROB_LS:
-            #     bestIndividual = LSBest.LS(population[0])
-            #     if pop.is_different(bestIndividual):
-            #         pop.addIndividual(bestIndividual)
-            #         population = pop.get_population()
+         
             modIndividuals =  []
             individuals = []
             selProbalities = pop.get_selProbabilities() # probabilidade de seleção
             individuals = np.random.choice(population,p,replace=False,p=selProbalities)
-            individuals = np.append(individuals, pop.showBestSoution())
+            individuals = np.append(individuals, pop.showBestSolution())
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                     future_to_individual = {executor.submit(LSBetter.LS,ind,where='ls'): ind for ind in individuals}
                     for future in concurrent.futures.as_completed(future_to_individual):
@@ -210,58 +226,33 @@ class GeneticAlgorithm:
             population = pop.get_population()
             
             #busca local exaustiva - best improvemment
-            p = max(round(config.SIZE_POP * 0.05),1) #0.05% da população
-            LSBest = lsb()
-            # bestIndividual = LSBest.LS(pop.showBestSoution(),where='ls')
-            # if pop.is_different(bestIndividual):
-            #     pop.addIndividual(bestIndividual)
-            #     population = pop.get_population()
-
-            modIndividuals =  []
+            # p = 3 # 3 threads
             individuals = []
-            selProbalities = pop.get_selProbabilities() # probabilidade de seleção
-            individuals = np.random.choice(population,p,replace=False,p=selProbalities)
-            individuals = np.append(individuals, pop.showBestSoution())
-            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-                    future_to_individual = {executor.submit(LSBest.LS,ind,where='ls'): ind for ind in individuals}
-                    for future in concurrent.futures.as_completed(future_to_individual):
-                        ind = future_to_individual[future]
-                        try:
-                            indiv = future.result()
-                            modIndividuals.append(indiv)
-                        except Exception as exc:
-                            print('%s gerou uma exceção na busca local - promoção: %s' % (str(ind), exc))
-                            traceback.print_exc()
+            # selProbalities = pop.get_selProbabilities() # probabilidade de seleção
+            # individuals = np.random.choice(population,(p-1),replace=False,p=selProbalities)
+            individuals = np.append(individuals, pop.showBestSolution())
+            individuals = np.append(individuals, pop.showSecondBestSolution())
+            
+            # cria threads 
+            for individual in individuals:
+                if np.random.random() < config.PROB_LS_BEST:
+                    if th.active_count()<3: # máximo 3 threads agindo de forma assíncrona
+                        a = MyThread(individual) #inicializa thread
+                        a.start()
 
-        
-            # avalie a população
-            for a in modIndividuals:
-
-                for e1, c1 in enumerate(a.get_giantTour()):
-                        for e2, c2 in enumerate(a.get_giantTour()):
-                            if e1 != e2 and c1 == c2:
-                                print("Elementos iguais na busca local - promoção")
-                                exit(1)
-
-                # indivíduo diferente do resto da população
-                if pop.is_different(a):
-                    pop.addIndividual(a)
-
-
-            # verifica se houve evolução na população
-            # print("pop.verifyDiversity(): "+ str(pop.verifyDiversity()))
-            # if not pop.verifyDiversity():
-            #     # print("Baixa diversidade")
-            #     controlPop = False # perdeu diversidade
-            #     if controlPop == controlPopPrev:
-            #         # print("contando")
-            #         sumControl += 1
-            #         # print("controlPop "+str(controlPop))
-            #         # print("controlPopPrev "+str(controlPopPrev))
-            # else:
-            #     # print("Entrou aqui")
-            #     sumControl = 0
-                
+            
+            if i >= config.GEN and cont >= config.GEN_NO_EVOL and timeControl > config.TIME_TOTAL:
+                print("th.active_count(): "+str(th.active_count()))
+                # não finalizar o programa enquanto tiver thread ativa
+                while th.active_count()>0:
+                    continue
+                if not newIndividuals:
+                     for ni in newIndividuals:
+                        if pop.is_different(ni):
+                            pop.addIndividual(ni)
+               
+                pop.sortPopulation()
+                best = pop.defineSurvivors(config.SIZE_POP)
             
             if round(bestPrev,9) == round(best,9):
                 cont += 1
@@ -281,17 +272,44 @@ class GeneticAlgorithm:
             timeControl += tAll
 
             print("GERAÇÃO: {} - Custo: {} - Tempo LS: {} - Tempo LS Promotion: {} - Tempo Total: {}".format(i,
-                                                   pop.showBestSoution().get_cost(),tLS,tTotalP,tAll))
+                                                   pop.showBestSolution().get_cost(),tLS,tTotalP,tAll))
 
             i += 1
 
         # liste os melhores indivíduos
         # print(population)
         # print(len(population))
-        return pop.showBestSoution()
+        return pop.showBestSolution()
         
     def is_different(self, solution,descendant):
         for d in descendant:
             if solution.get_cost() == d.get_cost():
                 return False
         return True
+    
+class MyThread(th.Thread):
+
+    def __init__(self, solution):
+        th.Thread.__init__(self)
+        self._solution = solution
+
+    def run(self):
+        global mutex
+        global newIndividuals
+        LSB = lsb()
+        # print("executando thread")
+        # print("solution: "+str(self._solution)+"\n")
+        individual = LSB.LS(self._solution)
+        # print("individual: "+ str(individual)+"\n")
+        cont = 0
+
+        #seção crítica
+        mutex.acquire()
+        for ind in newIndividuals:
+            if ind.get_cost() == individual.get_cost():
+                cont = 1
+                break
+        if cont == 0:
+            newIndividuals.append(individual)
+        mutex.release()
+        # print("saiu da thread")
