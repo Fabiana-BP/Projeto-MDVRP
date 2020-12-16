@@ -36,6 +36,7 @@ class GeneticAlgorithm:
         sumControl = 0
         cont = 0
         timeControl = 0
+        threads = []
         # avalie a população
 
         # critério de parada
@@ -236,23 +237,10 @@ class GeneticAlgorithm:
             # cria threads 
             for individual in individuals:
                 if np.random.random() < config.PROB_LS_BEST:
-                    if th.active_count()<3: # máximo 3 threads agindo de forma assíncrona
+                    if th.active_count()<4: # máximo 3 threads agindo de forma assíncrona
                         a = MyThread(individual) #inicializa thread
                         a.start()
-
-            
-            if i >= config.GEN and cont >= config.GEN_NO_EVOL and timeControl > config.TIME_TOTAL:
-                print("th.active_count(): "+str(th.active_count()))
-                # não finalizar o programa enquanto tiver thread ativa
-                while th.active_count()>0:
-                    continue
-                if not newIndividuals:
-                     for ni in newIndividuals:
-                        if pop.is_different(ni):
-                            pop.addIndividual(ni)
-               
-                pop.sortPopulation()
-                best = pop.defineSurvivors(config.SIZE_POP)
+                        threads.append(a)
             
             if round(bestPrev,9) == round(best,9):
                 cont += 1
@@ -276,9 +264,16 @@ class GeneticAlgorithm:
 
             i += 1
 
-        # liste os melhores indivíduos
-        # print(population)
-        # print(len(population))
+
+        print("th.active_count(): "+str(th.active_count()))
+        for t in threads:
+            t.join()
+        if newIndividuals:
+            for ni in newIndividuals:
+                if pop.is_different(ni):
+                    pop.addIndividual(ni)
+        newIndividuals = []
+        pop.sortPopulation()
         return pop.showBestSolution()
         
     def is_different(self, solution,descendant):

@@ -616,57 +616,57 @@ class LocalSearch:
 
     def M8orM9(self, solution, type):
         solution1 = copy.deepcopy(solution)
-        for ru, routeU in enumerate(solution1.get_routes()):
+        size = len(solution1.get_routes())
+        for ru in range(size-1):
+            routeU = solution1.get_routes()[ru]
             for i, u in enumerate(routeU.get_tour()):
-                for rv, routeV in enumerate(solution1.get_routes()):
+                for rv in range(ru+1,size):
+                    routeV = solution1.get_routes()[rv]
                     for j, v in enumerate(routeV.get_tour()):
-                        if u != v:
-                            # se eles não são da mesma rota
-                            if (u not in routeV.get_tour()) and (v not in routeU.get_tour()):
-                                if i+1 < len(routeU.get_tour()) and j+1 < len(routeV.get_tour()):
-                                    if type.upper() == "M8":
-                                        aux1 = [i, i+1]
-                                        replaceWith1 = [u, v]
-                                        aux2 = [j, j+1]
-                                        replaceWith2 = [
-                                            routeU.get_tour()[i+1], routeV.get_tour()[j+1]]
-                                    elif type.upper() == "M9":
-                                        aux1 = [i, i+1]
-                                        replaceWith1 = [
-                                            u, routeV.get_tour()[j+1]]
-                                        aux2 = [j, j+1]
-                                        replaceWith2 = [
-                                            routeU.get_tour()[i+1], v]
-                                    else:
-                                        print("ERROR - método incorreto")
-                                        exit(1)
+                        if i+1 < len(routeU.get_tour()) and j+1 < len(routeV.get_tour()):
+                            if type.upper() == "M8":
+                                aux1 = [i, i+1]
+                                replaceWith1 = [u, v]
+                                aux2 = [j, j+1]
+                                replaceWith2 = [
+                                    routeU.get_tour()[i+1], routeV.get_tour()[j+1]]
+                            elif type.upper() == "M9":
+                                aux1 = [i, i+1]
+                                replaceWith1 = [
+                                    u, routeV.get_tour()[j+1]]
+                                aux2 = [j, j+1]
+                                replaceWith2 = [
+                                    routeU.get_tour()[i+1], v]
+                            else:
+                                print("ERROR - método incorreto")
+                                exit(1)
 
-                                    # mudança na rota U
-                                    costRouteU = routeU.costReplaceNodes(
-                                        routeU, aux1, replaceWith1)
-                                    # print("aux1")
-                                    # print(aux1)
-                                    # print("replaceWith1")
-                                    # print(replaceWith1)
-                                    # mudança na rota V
-                                    costRouteV = routeV.costReplaceNodes(
-                                        routeV, aux2, replaceWith2)
-                                    # print("aux2")
-                                    # print(aux2)
-                                    # print("replaceWith2")
-                                    # print(replaceWith2)
+                            # mudança na rota U
+                            costRouteU = routeU.costReplaceNodes(
+                                routeU, aux1, replaceWith1)
+                            # print("aux1")
+                            # print(aux1)
+                            # print("replaceWith1")
+                            # print(replaceWith1)
+                            # mudança na rota V
+                            costRouteV = routeV.costReplaceNodes(
+                                routeV, aux2, replaceWith2)
+                            # print("aux2")
+                            # print(aux2)
+                            # print("replaceWith2")
+                            # print(replaceWith2)
 
-                                    newCost = solution.get_cost() - routeU.get_totalCost() - \
-                                        routeV.get_totalCost() + \
-                                        costRouteU[0] + costRouteV[0]
+                            newCost = solution.get_cost() - routeU.get_totalCost() - \
+                                routeV.get_totalCost() + \
+                                costRouteU[0] + costRouteV[0]
 
-                                    if newCost < solution.get_cost():
-                                        solution1.setRoute(costRouteU[1], ru)
-                                        solution1.setRoute(costRouteV[1], rv)
-                                        # atualizar giantTour
-                                        solution1.formGiantTour()
-                                        solution1.calculateCost()
-                                        return solution1
+                            if newCost < solution.get_cost():
+                                solution1.setRoute(costRouteU[1], ru)
+                                solution1.setRoute(costRouteV[1], rv)
+                                # atualizar giantTour
+                                solution1.formGiantTour()
+                                solution1.calculateCost()
+                                return solution1
 
         return solution
 
