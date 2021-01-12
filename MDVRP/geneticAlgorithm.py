@@ -3,8 +3,8 @@ from crossover import Crossover as cross
 from splitDepots import SplitDepots
 from splitAlgorithms import SplitAlgorithms as split
 from mutation import Mutation
-from localSearchBest import LocalSearchBest as lsb
 from localSearchFirst import LocalSearch as ls
+from localSearchBest import LocalSearchBest as lsb
 import numpy as np
 import config
 import concurrent.futures
@@ -230,13 +230,13 @@ class GeneticAlgorithm:
             # p = 3 # 3 threads
             individuals = []
             # selProbalities = pop.get_selProbabilities() # probabilidade de seleção
-            # individuals = np.random.choice(population,(p-1),replace=False,p=selProbalities)
+            # individuals = np.random.choice(population,1)
             individuals = np.append(individuals, pop.showBestSolution())
             individuals = np.append(individuals, pop.showSecondBestSolution())
             
             # cria threads 
             for individual in individuals:
-                if np.random.random() < config.PROB_LS_BEST:
+                if np.random.random() < config.PROB_LS_BEST_P:
                     if th.active_count()<4: # máximo 3 threads agindo de forma assíncrona
                         a = MyThread(individual) #inicializa thread
                         a.start()
@@ -251,6 +251,20 @@ class GeneticAlgorithm:
             #     population = pop.changePopulation()
             #     sumControl = 0
             if cont > config.GEN_NO_EVOL:
+                aux = 0
+                #início seção crítica
+                mutex.acquire()
+                if newIndividuals:
+                    aux = 1
+                    for ni in newIndividuals:
+                        if pop.is_different(ni):
+                            pop.addIndividual(ni)
+                newIndividuals = []
+                mutex.release()
+                if aux == 1:
+                    best = pop.defineSurvivors(config.SIZE_POP)
+                    if round(bestPrev,9) != round(best,9):
+                        cont = 0
                 # population = pop.changePopulation()
                 # cont = 0
                 print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
@@ -265,7 +279,7 @@ class GeneticAlgorithm:
             i += 1
 
 
-        print("th.active_count(): "+str(th.active_count()))
+        # print("th.active_count(): "+str(th.active_count()))
         for t in threads:
             t.join()
         if newIndividuals:

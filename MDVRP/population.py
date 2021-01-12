@@ -6,7 +6,6 @@ from solution import Solution
 from auxiliary_heuristics import NearestNeighbor
 from mutation import Mutation as mt
 from localSearchFirst import LocalSearch as ls
-#from localSearch import LocalSearch as ls
 import config
 import numpy as np
 
@@ -26,6 +25,7 @@ class Population:
         # Heurística do vizinho mais próximo
         customers = list(csts.get_customersList().values())
         cst0 = customers[np.random.randint(len(customers)-1)]
+        # cst0 = customers[0]
         tour = NearestNeighbor.nearestNeighbor(cst0)
         cluster = SplitDepots.splitByDepot(tour)
         # criação de rotas por depósitos, individual é um Solution
