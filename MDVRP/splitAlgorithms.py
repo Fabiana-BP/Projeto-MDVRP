@@ -15,7 +15,7 @@ class SplitAlgorithms:
     algoritmo adaptado de https://w1.cirrelt.ca/~vidalt/en/VRP-resources.html
     Linear Split algorithm
     '''
-    def splitLinear(solution,limitRoutes=True):
+    def splitLinear(solution, limitRoutes=True):
         solution1 = copy.deepcopy(solution)
         depotsList = dpts.get_depotsList()
         customers = solution1.get_giantTour()
@@ -29,7 +29,7 @@ class SplitAlgorithms:
                 if str(dpt) == str(depots[j].get_id()):
                     listCst.append(customers[j])
                     verifyDpt = True
-            
+
             if verifyDpt:
                 lenListCst = len(listCst)
                 sumDistance = []
@@ -78,7 +78,8 @@ class SplitAlgorithms:
                             del queue[0]
 
                 if potential[len(listCst)] > 1.e29:
-                    print("ERRO: nenhuma solução de divisão foi propagada até o último nó")
+                    print(
+                        "ERRO: nenhuma solução de divisão foi propagada até o último nó")
                     exit(1)
                 else:
                     # achando o número ótimo de rotas
@@ -333,10 +334,16 @@ class SplitAlgorithms:
             for j in range(len(customers)):
                 if str(depot.get_id()) == str(depots[j].get_id()):
                     path.append(customers[j])
+            # print(len(allDepots))
+            # print(len(customers))
+            # print(len(path))
+            # print(path)
+            # print("nVeiculos"+str(depot.get_numberVehicles()))
             # print("path: "+str(path))
             # gerar rotas para cada caminho
             # método retorna lista de predecessores
             pred = SplitAlgorithms.splitRoute(path, depot)
+            # print(pred)
             # método retorna lista de lista com rotas para um depósito (número máximo de veículos não delimitado)
             allroutes = SplitAlgorithms.extractVRP(pred, path)
             # verificar número de rotas formadas
@@ -386,21 +393,27 @@ class SplitAlgorithms:
     '''
     def splitRoute(path, depot):
         n = len(path)
-        vehicleCapacity = depot.get_loadVehicle()
-        durationRoute = depot.get_durationRoute()
+        # print("path")
+        # print(path)
+        # print(depot)
+        vehicleCapacity = depot.get_loadVehicle()  # máximo carregamento
+        durationRoute = depot.get_durationRoute()  # máxima duração
         v = []  # custo do menor caminho do depósito até o ponto.
         predecessor = []  # predecessores de cada idCsts neste caminho
         predecessor.append(-1)  # depósito não tem precedente
         v.append(0.0)
+        # print("n = {}".format(len(path)))
+
         for i in range(n):
             v.append(SplitAlgorithms._infinite)
-            predecessor.append("")
+            # pior hipótese - número de rotas = número clientes
+            predecessor.append(0)
 
         for i in range(1, n+1):
             load = 0.0
             cost = 0.0
             j = i
-            while (j <= n) and (load <= vehicleCapacity) and (cost <= durationRoute):
+            while (j <= n) and (load < vehicleCapacity) and (cost < 2*durationRoute):
                 customer = path[j-1]
                 load += customer.get_demand()
                 if i == j:
@@ -412,11 +425,17 @@ class SplitAlgorithms:
                     cost = cost - dist.euclidianDistance(previewCustomer.get_x_coord(), previewCustomer.get_y_coord(), depot.get_x_coord(), depot.get_y_coord()) + dist.euclidianDistance(previewCustomer.get_x_coord(
                     ), previewCustomer.get_y_coord(), customer.get_x_coord(), customer.get_y_coord()) + customer.get_service() + dist.euclidianDistance(customer.get_x_coord(), customer.get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
 
-                if (load <= vehicleCapacity) and (cost <= durationRoute):
+                if (load <= vehicleCapacity) and (cost <= 2*durationRoute):
                     if (v[i-1] + cost) < v[j]:
                         v[j] = v[i-1] + cost
                         predecessor[j] = i-1
-                    j += 1
+                j += 1
+                # print("cost: {} load: {}".format(cost, load))
+                # print("pred: {}".format(predecessor))
+                # print("v: {}".format(v))
+
+        # print("\n")
+        # print(predecessor)
         return predecessor
 
     '''
@@ -425,6 +444,7 @@ class SplitAlgorithms:
     retorna uma lista de trips onde cada índice contém uma lista de visitação e a demanda total destes clientes
     '''
     def extractVRP(listPredecessors, listCustomers):
+        # print(listPredecessors)
         trip = []
         totalDemand = []
         n = len(listPredecessors) - 1
@@ -440,7 +460,9 @@ class SplitAlgorithms:
             sumDemand = 0
             trp = []
             for k in range(i+1, j+1):
+                # print(listCustomers)
                 trp.append(listCustomers[k-1])
+
                 sumDemand += listCustomers[k-1].get_demand()
 
             trip[t] = [trp, sumDemand]

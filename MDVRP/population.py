@@ -30,6 +30,7 @@ class Population:
         cluster = SplitDepots.splitByDepot(tour)
         # criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinear(cluster)
+        # individual = split.mountRoutes(cluster)
         # print(individual)
         # print(individual.get_routes())
         rand = np.random.random()
@@ -46,6 +47,7 @@ class Population:
 
         # criação de rotas por depósitos, individual é um Solution
         individual = split.splitLinear(cluster)
+        # individual = split.mountRoutes(cluster)
         # print(individual)
         # print(individual.get_routes())
         rand = np.random.random()
@@ -68,12 +70,11 @@ class Population:
         # for i in self._population:
         #     print(i)
 
-        
         print(len(self._population))
 
         return self._population
 
-    def formRandomPopulation(self,size):
+    def formRandomPopulation(self, size):
         LS = ls()
         for i in range(2 * size):
             if len(self._population) >= size:
@@ -82,6 +83,7 @@ class Population:
             cluster = SplitDepots.randomDistribution()
             # criação de rotas por depósitos, individual é um Solution
             individual = split.splitLinear(cluster)
+            # individual = split.mountRoutes(cluster)
             # print(individual)
             # print(individual.get_routes())
             rand = np.random.random()
@@ -109,22 +111,24 @@ class Population:
     def defineSurvivors(self, size):
         # posicoes a deletar
         # print(self._population)
-        fixIndividuals = max(2,round(0.1*config.SIZE_POP))
-        individuals = np.random.choice(self._population[0:(len(self._population)-fixIndividuals)],size-fixIndividuals,replace=False)
-        for i in range(1,(fixIndividuals+1)):
-            individuals = np.append(individuals,self._population[(len(self._population)-i)])
+        fixIndividuals = max(2, round(0.1*config.SIZE_POP))
+        individuals = np.random.choice(self._population[0:(
+            len(self._population)-fixIndividuals)], size-fixIndividuals, replace=False)
+        for i in range(1, (fixIndividuals+1)):
+            individuals = np.append(
+                individuals, self._population[(len(self._population)-i)])
         self._population = list(individuals)
         # del self._population[0:(len(self._population)-size)]
         self.sortPopulation()
         # print(self._population)
         # exit(1)
         return self.showBestSolution().get_cost()
-    
+
     def changePopulation(self):
         print('mudou população')
         # print(self._population)
         lenght = len(self._population)
-        sizeSurvivors = max(1,round(lenght*0.1))
+        sizeSurvivors = max(1, round(lenght*0.1))
         del self._population[0:(len(self._population)-sizeSurvivors)]
         self.definePopulation(config.SIZE_POP)
         # self.sortPopulation()
@@ -159,8 +163,8 @@ class Population:
             return individual
         else:
             return -1
-    
-    def removeIndividual(self,individual):
+
+    def removeIndividual(self, individual):
         self._population.remove(individual)
 
     '''
@@ -192,7 +196,7 @@ class Population:
 
     def verifyDiversity(self):
         lenght = len(self._population)
-        p = max(3,round(lenght * 0.15))
+        p = max(3, round(lenght * 0.15))
         # escolher p indivíduos aleatórios
         indexes = np.random.choice(lenght, p, replace=False)
         metric = 0
@@ -212,7 +216,7 @@ class Population:
         # perdeu diversidade
         if metric <= config.METRIC:
             return False
-        
+
         return True
 
     def get_population(self):
