@@ -189,36 +189,6 @@ class Population:
         self._population = sorted(
             self._population, key=Solution.get_cost, reverse=True)
 
-    '''
-    Método verifica a diversidade da população
-    @return False caso métrica de diversidade for maior que config.METRIC
-    '''
-
-    def verifyDiversity(self):
-        lenght = len(self._population)
-        p = max(3, round(lenght * 0.15))
-        # escolher p indivíduos aleatórios
-        indexes = np.random.choice(lenght, p, replace=False)
-        metric = 0
-        for i in indexes:
-            m = 0
-            if i > 0 and i < lenght - 1:
-                m = abs(self._population[i].get_cost() - self._population[i-1].get_cost(
-                )) + abs(self._population[i].get_cost() - self._population[i+1].get_cost())
-            elif i == 0:
-                m = abs(self._population[i].get_cost() - self._population[lenght-1].get_cost(
-                )) + abs(self._population[i].get_cost() - self._population[i+1].get_cost())
-            else:
-                m = abs(self._population[i].get_cost() - self._population[i-1].get_cost(
-                )) + abs(self._population[i].get_cost() - self._population[0].get_cost())
-        metric += m
-        print(metric)
-        # perdeu diversidade
-        if metric <= config.METRIC:
-            return False
-
-        return True
-
     def get_population(self):
         return self._population
 

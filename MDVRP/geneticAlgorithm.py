@@ -12,6 +12,7 @@ import copy
 import time
 import traceback
 import threading as th
+import logging
 
 mutex = th.Semaphore(1)
 newIndividuals = []  # indivíduos obtidos na busca local best improvement
@@ -32,9 +33,6 @@ class GeneticAlgorithm:
         def minor(x, y): return x if x.get_cost() < y.get_cost() else y
         best = 0
         bestPrev = 0
-        controlPop = True
-        controlPopPrev = True
-        sumControl = 0
         cont = 0
         timeControl = 0
         threads = []
@@ -46,34 +44,29 @@ class GeneticAlgorithm:
         while i < config.GEN and cont <= config.GEN_NO_EVOL and timeControl < config.TIME_TOTAL:
             tAllIni = time.time()
             bestPrev = best
-            controlPopPrev = controlPop
             tLS = 0
 
             # sizePopulation = len(population)
             descendant = []
             for j in range(round(config.SIZE_DESC/2)):
-                controlPop = True
                 selProbalities = pop.get_selProbabilities()  # probabilidade de seleção
-                # print("pop: "+str(len(population)))
                 # print("prob: "+str(len(selProbalities)))
+
                 # selecione os pais
+
                 aux = np.random.choice(
                     population, 2, replace=False, p=selProbalities)
-
-                # aux1 = population[np.random.randint(len(population))]
-                # aux2 = population[np.random.randint(len(population))]
 
                 P1 = minor(aux[0], aux[1])
 
                 aux = np.random.choice(
                     population, 2, replace=False, p=selProbalities)
-                # aux1 = population[np.random.randint(len(population))]
-                # aux2 = population[np.random.randint(len(population))]
+
                 P2 = minor(aux[0], aux[1])
 
                 # Crossover
 
-                rand = np.random.random()
+                rand = np.random.random_sample()
                 # print(rand)
                 # print(P1)
                 # print(P2)
@@ -152,7 +145,6 @@ class GeneticAlgorithm:
                 # print(future_to_individual)
                 # print(individuals[0])
                 # print(modIndividuals)
-                # exit(1)
                 tTotal = (time.time() - ini)/60
                 tLS += tTotal
                 for a in range(2):
@@ -161,17 +153,16 @@ class GeneticAlgorithm:
                             if e1 != e2 and c1 == c2:
                                 print("Elementos iguais na busca local")
                                 exit(1)
-                # exit(1)
+
                 # avalie a população
+
                 for a in range(2):
                     # indivíduo diferente do resto da população
                     if self.is_different(modIndividuals[a], descendant):
-                        # pop.addIndividual(modIndividuals[a])
                         descendant.append(modIndividuals[a])
 
-                # pop.sortPopulation()
-                # population = pop.get_population()
             # inserir descendentes à população
+
             for desc in descendant:
                 if pop.is_different(desc):
                     pop.addIndividual(desc)
@@ -186,7 +177,6 @@ class GeneticAlgorithm:
                 # print("novo: "+ str(len(newIndividuals)))
                 for ni in newIndividuals:
                     if pop.is_different(ni):
-                        # print("achou assíncrona")
                         pop.addIndividual(ni)
                 newIndividuals = []
             mutex.release()
@@ -194,7 +184,8 @@ class GeneticAlgorithm:
 
             pop.sortPopulation()
             population = pop.get_population()
-            # promoção
+
+            # promoção - busca local first improvemtent de 10% da população
 
             p = max(round(config.SIZE_POP * 0.1), 1)  # 10% da população
             LSBetter = ls()
@@ -217,8 +208,9 @@ class GeneticAlgorithm:
                         print(
                             '%s gerou uma exceção na busca local - promoção: %s' % (str(ind), exc))
                         traceback.print_exc()
-            # exit(1)
+
             # avalie a população
+
             for a in modIndividuals:
 
                 for e1, c1 in enumerate(a.get_giantTour()):
@@ -231,16 +223,17 @@ class GeneticAlgorithm:
                 if pop.is_different(a):
                     pop.addIndividual(a)
 
-            tTotalP = (time.time() - ini)/60
+            tTotalP = time.time() - ini
 
             pop.sortPopulation()
 
             # defina a população sobrevivente
+
             best = pop.defineSurvivors(config.SIZE_POP)
             population = pop.get_population()
 
-            # busca local exaustiva - best improvemment
-            # p = 3 # 3 threads
+            # busca local exaustiva assícrona - best improvemment dos dois melhores indivíduos
+
             individuals = []
             # selProbalities = pop.get_selProbabilities() # probabilidade de seleção
             # individuals = np.random.choice(population,1)
@@ -249,22 +242,24 @@ class GeneticAlgorithm:
 
             # cria threads
             for individual in individuals:
-                if np.random.random() < config.PROB_LS_BEST_P:
+                if np.random.random_sample() < config.PROB_LS_BEST_P:
                     if th.active_count() < 4:  # máximo 3 threads agindo de forma assíncrona
                         a = MyThread(individual)  # inicializa thread
                         a.start()
                         threads.append(a)
 
+            # verifica número de gerações sem melhoras
+
             if round(bestPrev, 9) == round(best, 9):
                 cont += 1
             else:
                 cont = 0
-            # if sumControl > config.CONT_METRIC:
-            #     # idum = i * seed
-            #     population = pop.changePopulation()
-            #     sumControl = 0
+
             if cont > config.GEN_NO_EVOL:
                 aux = 0
+
+                # verifica se há solutions na lista newIndividuos
+
                 # início seção crítica
                 mutex.acquire()
                 if newIndividuals:
@@ -274,38 +269,46 @@ class GeneticAlgorithm:
                             pop.addIndividual(ni)
                 newIndividuals = []
                 mutex.release()
+                # fim seção crítica
+
                 if aux == 1:
                     best = pop.defineSurvivors(config.SIZE_POP)
                     if round(bestPrev, 9) != round(best, 9):
                         cont = 0
-                # population = pop.changePopulation()
-                # cont = 0
+
                 print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
+                # logging.debug("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
+
             pop.sortPopulation()
             population = pop.get_population()
-            tAll = (time.time() - tAllIni)/60
-            timeControl = (time.time() - timeIni)/60
+            tAll = time.time() - tAllIni  # tempo da geração
+            timeControl = time.time() - timeIni  # tempo total
 
             print("GERAÇÃO: {} - Custo: {} - Tempo LS: {} - Tempo LS Promotion: {} - Tempo Total: {}".format(i,
-                                                                                                             pop.showBestSolution().get_cost(), tLS, tTotalP, tAll))
-
+                                                                                                             pop.showBestSolution().get_cost(), tLS/60, tTotalP/60, tAll/60))
+            # logging.debug("GERAÇÃO: {} - Custo: {} - Tempo LS: {} - Tempo LS Promotion: {} - Tempo Total: {}".format(i,
+            #                                                                                                          pop.showBestSolution().get_cost(), tLS/60, tTotalP/60, tAll/60))
             i += 1
 
         # finalizar thread se ultrapassar o tempo limite.
-        # threads daemon morrem quando as não daemon finalzam
-        if (time.time() - timeIni)/60 >= config.TIME_TOTAL:
+        if (time.time() - timeIni) >= config.TIME_TOTAL:
             for t in threads:
                 t.stop()
         else:
             for t in threads:
                 t.join()
 
+        # verificar se há indivíduos na lista newIndividuals
         if newIndividuals:
             for ni in newIndividuals:
                 if pop.is_different(ni):
                     pop.addIndividual(ni)
         newIndividuals = []
+
+        # ordena população
         pop.sortPopulation()
+
+        # retorna melhor indivíduo
         return pop.showBestSolution()
 
     def is_different(self, solution, descendant):

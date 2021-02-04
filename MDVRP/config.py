@@ -1,5 +1,5 @@
 # dados base
-DIRECTORY_DATAS = "dat/"
+DIRECTORY_DATAS = "instances/"
 DIRECTORY_RESULT = "result/"
 BST_COST = [576.87, 473.53, 641.19, 1001.04, 750.03, 876.50, 881.97, 4387.38, 3873.64, 3650.04, 3546.06,
             1318.95, 1318.95, 1360.12, 2505.42, 2572.23, 2708.99, 3702.85, 3827.06, 4058.07, 5474.74, 5702.16, 6078.75]
@@ -19,7 +19,7 @@ GEN = 60  # número de gerações
 GEN_NO_EVOL = 15  # número permitido de gerações sem mudanças
 SP = 2  # pressão seletiva para linear ranking
 N_REPETITIONS = 10
-TIME_TOTAL = 60
+TIME_TOTAL = 3600  # tempo em segundos
 
 # METRIC = 3.5 # métrica de diversidade
 # CONT_METRIC = 5 # quantidade de vezes que a métrica de diversidade pode ser desrespeitada
