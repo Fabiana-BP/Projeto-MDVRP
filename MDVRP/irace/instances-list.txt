@@ -10,8 +10,16 @@
 # 100/100-1_100-2.tsp --time 1
 # 100/100-1_100-3.tsp --time 2
 # 100/100-1_100-4.tsp --time 3
-teste
-teste1
+# teste
+# teste1
+p01
+p02
+p01
+p23
+p08
+p08
+p02
+p23
 # p01
 # p02
 # p03

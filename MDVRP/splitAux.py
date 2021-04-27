@@ -47,7 +47,7 @@ class SplitAlgorithms:
                 sumDistance[0] = 0  # distancia do depósito
                 # distância do depósito ao primeiro nó
                 sumDistance[1] = dist.euclidianDistance(listCst[0].get_x_coord(
-                ), listCst[0].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+                ), listCst[0].get_y_coord(), depot.get_x_coord(), depot.get_y_coord()) + listCst[0].get_service()
 
                 sumLoad[0] = 0
                 sumLoad[1] = customers[0].get_demand()
@@ -56,7 +56,7 @@ class SplitAlgorithms:
                 # inicializar com o somatório distancia de i-1 a i e a demanda de i-1 a i
                 for i in range(2, lenListCst+1):
                     sumDistance[i] = sumDistance[i-1] + dist.euclidianDistance(listCst[i-2].get_x_coord(
-                    ), listCst[i-2].get_y_coord(), listCst[i-1].get_x_coord(), listCst[i-1].get_y_coord())
+                    ), listCst[i-2].get_y_coord(), listCst[i-1].get_x_coord(), listCst[i-1].get_y_coord()) + listCst[i-1].get_service()
                     sumLoad[i] = sumLoad[i-1] + listCst[i-1].get_demand()
 
                 queue = [0]
@@ -75,7 +75,7 @@ class SplitAlgorithms:
                                 del queue[len(queue)-1]
                             queue.append(i)
                         # Verifica se a frente consegue chegar ao próximo nó, caso contrário ele desaparecerá.
-                        while len(queue) > 0 and (sumLoad[i+1] - sumLoad[queue[0]]) > (depot.get_loadVehicle() + 0.0001):
+                        while len(queue) > 0 and (sumLoad[i+1] - sumLoad[queue[0]]) > (depot.get_loadVehicle() + 0.0001) and (sumDistance[i+1] - sumDistance[queue[0]]) > (2*depot.get_durationRoute() + 0.0001):
                             del queue[0]
 
                 if potential[len(listCst)] > 1.e29:
@@ -209,7 +209,7 @@ class SplitAlgorithms:
                             queue.append(i)
 
                         # Verifica se a frente consegue chegar ao próximo nó, caso contrário ele desaparecerá.
-                        while len(queue) > 0 and (sumLoad[i+1] - sumLoad[queue[0]]) > (depot.get_loadVehicle() + 0.0001):
+                        while len(queue) > 0 and (sumLoad[i+1] - sumLoad[queue[0]]) > (depot.get_loadVehicle() + 0.0001) and (sumDistance[i+1] - sumDistance[queue[0]]) > (2*depot.get_durationRoute() + 0.0001):
                             del queue[0]
 
                     i += 1
@@ -252,10 +252,10 @@ class SplitAlgorithms:
 
     def propagate(self, i, j, listCst, sumDistance, potential, depot):
         distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(), listCst[i].get_y_coord(
-        ), depot.get_x_coord(), depot.get_y_coord())  # distancia de i+1 até o depósito
+        ), depot.get_x_coord(), depot.get_y_coord()) + listCst[i].get_service()  # distancia de i+1 até o depósito
 
         distDeptJ = dist.euclidianDistance(listCst[j-1].get_x_coord(), listCst[j-1].get_y_coord(
-        ), depot.get_x_coord(), depot.get_y_coord())  # distancia de j até o depósito
+        ), depot.get_x_coord(), depot.get_y_coord()) + listCst[j-1].get_service()  # distancia de j até o depósito
 
         return potential[i] + sumDistance[j] - sumDistance[i+1] + distDeptNextI + distDeptJ
 
@@ -277,9 +277,9 @@ class SplitAlgorithms:
 
     def dominates(self, i, j, listCst, sumDistance, potential, sumLoad, depot):
         distDeptNextJ = dist.euclidianDistance(listCst[j].get_x_coord(
-        ), listCst[j].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+        ), listCst[j].get_y_coord(), depot.get_x_coord(), depot.get_y_coord()) + listCst[j].get_service()
         distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(
-        ), listCst[i].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+        ), listCst[i].get_y_coord(), depot.get_x_coord(), depot.get_y_coord()) + listCst[i].get_service()
 
         return sumLoad[i] == sumLoad[j] and (potential[j] + distDeptNextJ) > (potential[i] + distDeptNextI + sumDistance[j+1] - sumDistance[i+1] - 0.0001)
 
@@ -301,9 +301,9 @@ class SplitAlgorithms:
 
     def dominatesRight(self, i, j, listCst, sumDistance, potential, depot):
         distDeptNextJ = dist.euclidianDistance(listCst[j].get_x_coord(
-        ), listCst[j].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+        ), listCst[j].get_y_coord(), depot.get_x_coord(), depot.get_y_coord()) + listCst[j].get_service()
         distDeptNextI = dist.euclidianDistance(listCst[i].get_x_coord(
-        ), listCst[i].get_y_coord(), depot.get_x_coord(), depot.get_y_coord())
+        ), listCst[i].get_y_coord(), depot.get_x_coord(), depot.get_y_coord()) + listCst[i].get_service()
 
         return (potential[j] + distDeptNextJ) < (potential[i] + distDeptNextI + sumDistance[j+1] - sumDistance[i+1] + 0.0001)
 

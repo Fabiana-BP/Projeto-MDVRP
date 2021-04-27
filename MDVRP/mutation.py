@@ -6,12 +6,26 @@ import config
 
 class Mutation:
 
-    def mutation(giantTour):
+    def mutation1(individual, level=4):
+
+        depots = copy.deepcopy(individual.get_depots())
+        if np.random.random() < config.PROB_MUTATION:
+            movimentation = [Mutation.M1, Mutation.M2, Mutation.M3]
+            level = np.random.randint(len(movimentation * 2))
+            for i in range(level):
+                m = np.random.randint(len(movimentation))
+                depots = movimentation[m](depots)
+
+            individual.set_depots(depots)
+
+        return individual
+
+    def mutation(giantTour, level=2):
         tour = copy.deepcopy(giantTour)
         if np.random.random() < config.PROB_MUTATION:
             movimentation = [Mutation.M1, Mutation.M2, Mutation.M3]
-            nMovimentation = np.random.randint(len(movimentation *2))
-            for i in range(nMovimentation):
+            level = np.random.randint(len(movimentation * 2))
+            for i in range(level):
                 m = np.random.randint(len(movimentation))
                 tour = movimentation[m](tour)
 

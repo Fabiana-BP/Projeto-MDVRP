@@ -64,7 +64,7 @@ class SplitDepots:
     '''
     def randomDistribution():
         #print('Entrou aqui')
-        #np.random.seed(idum)
+        # np.random.seed(idum)
         SplitDepots._individual = Solution()
         customersList = copy.deepcopy(csts.get_customersList())  # dicionário
         # lista com as chaves dos clientes
@@ -75,7 +75,6 @@ class SplitDepots:
         maxCustomers = round(config.FRAC_MAX_DISTRIBUTION * base)
 
         nCustomers = len(keysCst)
-        solution = {}
 
         # (depósito, [total de demanda, número de clientes alocados]
         control = {}
@@ -165,7 +164,7 @@ class SplitDepots:
             SplitDepots._availableDepots.append([dpt, dpts.get_depotsList()[dpt].get_loadTotal(
             ), 0.0, 0])  # depósito, carga totaL,demanda total atendida,clientes alocados
 
-        unallocatedCustomers = SplitDepots.GilletJohnsonProcedure(
+        SplitDepots.GilletJohnsonProcedure(
             customersList, len(SplitDepots._availableDepots))
         # print("verificando")
         # print(SplitDepots._individual)
@@ -211,7 +210,7 @@ class SplitDepots:
         # print("check")
         # print(unallocatedCustomers[cst])
         # ordenar lista auxiliar em ordem decrescente
-        pts = sorted(auxiliar, key=lambda x: x[1], reverse=True)
+        pts = sorted(auxiliar, key=lambda x: x[1], reverse=False)
         # print("pts:")
         # print(pts)
         # print(SplitDepots._individual)
@@ -253,6 +252,5 @@ class SplitDepots:
         # print(unallocatedCustomers)
         # print(SplitDepots._availableDepots)
         if len(unallocatedCustomers) > 0:
-            return SplitDepots.GilletJohnsonProcedure(unallocatedCustomers, numberDepotsAvailable)
-        else:
-            return unallocatedCustomers
+            SplitDepots.GilletJohnsonProcedure(
+                unallocatedCustomers, numberDepotsAvailable)
