@@ -107,7 +107,7 @@ maxExperiments = 300
 
 ## Minimum number of configurations needed to continue the execution of
 ## each race (iteration).
-# minNbSurvival = 0
+minNbSurvival = 1
 
 ## Number of configurations to be sampled and evaluated at each iteration.
 # nbConfigurations = 0
