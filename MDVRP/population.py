@@ -78,14 +78,14 @@ class Population:
         # individual = self.localSearch(individual, timeI)
 
         self.sortPopulation()
-        print(self.showBestSolution())
+        # print(self.showBestSolution())
 
         # individual = self.localSearch(self.showBestSolution(), timeI)
         # self._population[len(self._population)-1] = individual
         # print(self.showBestSolution())
         # self.sortPopulation()
-        for i in self._population:
-            print(i)
+        # for i in self._population:
+        #     print(i)
         # print(i.get_routes())
         # print(i.get_cost())
         # print(i.get_nRoutesByDepot())
@@ -96,7 +96,7 @@ class Population:
         # self.test(self.showBestSolution())
         # exit(1)
 
-        print(len(self._population))
+        # print(len(self._population))
         print("Tempo população: {} minutos".format((time.time()-timeI)/60))
         return self._population
 

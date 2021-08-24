@@ -82,12 +82,12 @@ class GeneticAlgorithm:
                     children = cross.PMX1(copy.deepcopy(P1), copy.deepcopy(P2))
                 # print("children: \n")
                 # print(children)
-                for a in range(2):
-                    for e1, c1 in enumerate(children[a].get_giantTour()):
-                        for e2, c2 in enumerate(children[a].get_giantTour()):
-                            if e1 != e2 and c1 == c2:
-                                print("Elementos iguais")
-                                exit(1)
+                # for a in range(2):
+                #     for e1, c1 in enumerate(children[a].get_giantTour()):
+                #         for e2, c2 in enumerate(children[a].get_giantTour()):
+                #             if e1 != e2 and c1 == c2:
+                #                 print("Elementos iguais")
+                #                 exit(1)
 
                 # Mutação
 
@@ -204,7 +204,7 @@ class GeneticAlgorithm:
             pop.sortPopulation()
             population = pop.get_population()
 
-            # promoção - busca local first improvemtent de 10% da população
+            # promoção - busca local first improvement de 10% da população
             ini = time.time()
             p = max(round(config.SIZE_POP * 0.1), 1)  # 10% da população
             LSBetter = lsb()
@@ -237,11 +237,11 @@ class GeneticAlgorithm:
 
             for a in modIndividuals:
 
-                for e1, c1 in enumerate(a.get_giantTour()):
-                    for e2, c2 in enumerate(a.get_giantTour()):
-                        if e1 != e2 and c1 == c2:
-                            print("Elementos iguais na busca local - promoção")
-                            exit(1)
+                # for e1, c1 in enumerate(a.get_giantTour()):
+                #     for e2, c2 in enumerate(a.get_giantTour()):
+                #         if e1 != e2 and c1 == c2:
+                #             print("Elementos iguais na busca local - promoção")
+                #             exit(1)
 
                 # indivíduo diferente do resto da população
                 if pop.is_different(a):
@@ -311,7 +311,7 @@ class GeneticAlgorithm:
                     if round(bestPrev, 9) != round(best, 9):
                         cont = 0
 
-                print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
+                # print("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
                 # print(pop.get_population())
                 # logging.debug("ALERTA POPULAÇÃO PAROU DE EVOLUIR")
 
@@ -320,8 +320,8 @@ class GeneticAlgorithm:
             tAll = time.time() - tAllIni  # tempo da geração
             timeControl = time.time() - timeIni  # tempo total
 
-            print("GERAÇÃO: {} - Custo: {} - Tempo LS: {} - Tempo LS Promotion: {} - Tempo Total: {}".format(i,
-                                                                                                             pop.showBestSolution().get_cost(), tLS/60, tTotalP/60, tAll/60))
+            # print("GERAÇÃO: {} - Custo: {} - Tempo LS: {} - Tempo LS Promotion: {} - Tempo Total: {}".format(i,
+                                                                                                            #  pop.showBestSolution().get_cost(), tLS/60, tTotalP/60, tAll/60))
             # logging.debug("GERAÇÃO: {} - Custo: {} - Tempo LS: {} - Tempo LS Promotion: {} - Tempo Total: {}".format(i,
             #                                                                                                          pop.showBestSolution().get_cost(), tLS/60, tTotalP/60, tAll/60))
             i += 1

@@ -26,24 +26,25 @@ class LocalSearch:
         @param nMovimentations, para indicar se serão utilizados todos os movimentos ou apenas alguns. Opções: 'all' default ou 'random'
         '''
 
-        movimentation = [self.M1, self.M2, self.M3, self.M4,
-                         self.M5, self.M6, self.M7, self.M8, self.M9, self.M10]
+        movimentation = [self.M2, self.M4,self.M5, self.M6, self.M7, self.M8, self.M9, self.M10]
         # print("timeIni: {}".format(timeIni))
 
         # movimentation = [self.M1a, self.M1b, self.M2a, self.M2b, self.M3a, self.M3b, self.M4a,
         #                  self.M4b, self.M5a, self.M5b, self.M6a, self.M6b, self.M7, self.M8, self.M9, self.M10]
         lenght = len(movimentation)
         prob = 0  # config.PROB_LS
+        # pMov = [0.1, 0.1, 0.05, 0.05, 0.05, 0.02, 0.05, 0.2, 0.3, 0.08]
         # embaralhar os movimentos
         if nMovimentations == 'random':
             n = max(2, round(0.8*lenght))
             p = np.random.randint(1, n+1)
-            movimentation = np.random.choice(movimentation, p, replace=True)
+            movimentation = np.random.choice(
+                movimentation, p, replace=False)
         else:
             # p = np.random.randint(1,lenght)
             # prob = config.PROB_LS_BEST
             movimentation = np.random.choice(
-                movimentation, lenght, replace=True)
+                movimentation, lenght, replace=False)
 
         bestSolution = None
         bestSolution = copy.deepcopy(solution)
@@ -89,7 +90,7 @@ class LocalSearch:
                     cont += 1
                     # print(
                     #     "achou melhor first {}  -  {}***************************************************\n\n".format(i, m))
-                if cont > 4:
+                if cont > 10:
                     # print(
                     #     "não  achou melhor first  {}  - {}***************************************************\n\n".format(i, m))
                     # excluir rotas vazias

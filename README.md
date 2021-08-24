@@ -1,6 +1,6 @@
 # Projeto-MDVRP
 
-Em construção
+Modelo de computação evolucionária baseado no algoritmo genético para o Problema de Roteamento de Veículos com Múltiplos Depósitos, incluindo técnicas de busca local. O algoritmo genético conta com dois operadores de combinação (OBX e PMX) e processos de busca local síncronos e assíncronos com estratégias first improvement, best improvement e ILS modificado.
 
 ## IRACE Package 
 Procedimento de iterated racing para configuração automática do algoritmo genético. Referência e guia pode ser encontrado em:
